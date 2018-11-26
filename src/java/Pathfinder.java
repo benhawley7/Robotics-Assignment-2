@@ -15,8 +15,7 @@ public class Pathfinder{
 	public static void main(String[] args){
 		
 		Pathfinder p = new Pathfinder(6,7);
-		p.printPrev();
-		
+
 		//Set occupied cells
 		p.updateCell(5,4,true);
 		//p.updateCell(5,3,true);
@@ -87,17 +86,6 @@ public class Pathfinder{
 			distance = Integer.MAX_VALUE;
 			prev = null;
 			depth = 0;		
-			
-		}
-		
-		public Node(int x, int y, Cell cell) {
-			
-			this.x = x;
-			this.y = y;
-			this.occupied = cell.occupied();
-			distance = Integer.MAX_VALUE;
-			prev = null;
-			depth = 0;	
 			
 		}
 		
