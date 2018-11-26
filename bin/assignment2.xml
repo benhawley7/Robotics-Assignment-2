@@ -16,7 +16,7 @@
     <property name="debug" value=""/> <!-- use "-debug" to run in debug mode -->
     <property name="build.dir" value="${basedir}/bin/classes" />
 
-    <property name="jasonJar" value="/Users/trp/Teaching.local/jason/libs/jason-2.2.jar"/>
+    <property name="jasonJar" value="C:\Java\Jason-2.2a\libs\jason-2.2.jar"/>
 
     <path id="project.classpath">
         <pathelement location="${basedir}"/>

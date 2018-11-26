@@ -10,7 +10,6 @@ import java.awt.Graphics;
 import java.util.ArrayList;
 import java.util.logging.*;
 
-import Pathfinder.Node;
 
 public class ParamedicEnv extends Environment {
 	
@@ -51,6 +50,11 @@ public class ParamedicEnv extends Environment {
                 logger.info("adding victim at: "+x+","+y);
                 mapView.addVictim(x, y);
                 
+            } else if (action.getFunctor().equals("setAgentLocation")) {
+                int x = (int)((NumberTerm)action.getTerm(0)).solve();
+                int y = (int)((NumberTerm)action.getTerm(1)).solve();
+                model.addAgent(x,y);
+                logger.info("adding agent at: "+x+","+y);
             } else if (action.getFunctor().equals("addObstacle")) {
                 int x = (int)((NumberTerm)action.getTerm(0)).solve();
                 int y = (int)((NumberTerm)action.getTerm(1)).solve();
@@ -67,9 +71,10 @@ public class ParamedicEnv extends Environment {
                 
             } else if (action.getFunctor().equals("nextTarget")) {
             	int [] agentPos = model.getAgentPosition();
+            	logger.info("Agent Position: " + agentPos[0] + " " + agentPos[1]);
             	ArrayList<int[]> potentialVictims = model.getPotentialVictimLocations();
             	ArrayList<int[]> obstaclesPos = model.getObstacleLocations();
-            	
+              	logger.info("Potential Victims" + potentialVictims.get(0)[0] + ", " + potentialVictims.get(0)[1]);
             	Pathfinder p = new Pathfinder(GSize, GSize);
             	
             	// Josh Loves i lol
@@ -78,20 +83,21 @@ public class ParamedicEnv extends Environment {
             		p.updateCell(obstaclePos[0], obstaclePos[1], true);
             	}
             	    
-            	int[] currentNearestPos = {-1, -1};
-            	int currentShortestLength = Integer.MAX_VALUE; 
+            	int[] currentNearestPos = agentPos;
+            	int currentShortestPath = Integer.MAX_VALUE; 
             	for (int j = 0; j < potentialVictims.size(); j++) {
             		int[] victimLocation = potentialVictims.get(j);
-//            		Node[] path = p.getPath(agentPos[0], agentPos[1], victimLocation[0], victimLocation[1]);
-            		
-            		
+            		Pathfinder.Node[] path = p.getPath(agentPos[0], agentPos[1], victimLocation[0], victimLocation[1]);
+            		if (path.length < currentShortestPath) {
+            			logger.info(victimLocation[0] + ", " + victimLocation[1] + " is closer than " + currentNearestPos[0] + ", " + currentNearestPos[1]);
+            			currentNearestPos = victimLocation;
+            			currentShortestPath = path.length;
+            		}
             	}
             	
-            	
-            	
-            	
+            	logger.info("Nearest Neighbour is" + currentNearestPos[0] + "," + currentNearestPos[1]);
             } else {
-                logger.info("executing: "+action+", but not implemented!");
+                logger.info("executing: "+action+", but not implemented! Lel");
                 return true;
                 // Note that technically we should return false here.  But that could lead to the
                 // following Jason error (for example):
@@ -127,16 +133,16 @@ public class ParamedicEnv extends Environment {
         }
         
         public int[] getAgentPosition() {
+        	int[] agentPos = {-1, -1};
           	// Find the position of the agent
         	for (int x = 0; x < GSize; x++) {
         		for (int y = 0; y < GSize; y++) {
-        			if (model.getAgAtPos(x, y) == 1) {
-        				int[] agentPos = {x, y}; 
-        				return agentPos;
+        			if (model.hasObject(AGENT, x, y) == true) {
+        				agentPos[0] = x;
+        				agentPos[1] = y;
         			}
         		}
         	}
-        	int[] agentPos = {-1, -1}; 
 			return agentPos;
         }
         
