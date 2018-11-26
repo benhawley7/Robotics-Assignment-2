@@ -1,7 +1,10 @@
-// Agent paramedic in project Assignment2.mas2j
-
+// Agent paramedic in project Assignment2.mas2j
+
+
+
 ////////////// Initial beliefs and rules ///////////////////////////////////////
-
+
+
 	//Value of price doesn't matter as there is only one agent
 	price(_Service,X):- X = 1.
 	
@@ -13,14 +16,22 @@
 	nearest(self, Nx, Ny):-
 		location(self, Sx, Sy)&
 		location(victim, Nx, Ny)&
-		.print(Nx-Sx + Ny-Sy).	
+		location(victim, Lx, Ly)&
+		distance(Sx,Sy,Nx,Ny) <= distance(Sx,Sy,Lx,Ly)&
+		.print(Nx-Sx + Ny-Sy).
+		
+	distance(X1,Y1,X2,Y2,D):-
+		D= X1-X2+Y1-Y2.
 
 ///////////////////// Initial goals ///////////////////////////////////////////
-
 
-
+
+
+
+
 ///////////////////////// Plans ////////////////////////////////////////////////
-
+
+
 	/*Contract Net Protocol Implementation*/
 	
 		//When this agent knows who plays the part of initiator
@@ -57,7 +68,10 @@
 			location(hospital,_,_) & 
 			location(victim,_,_) &
 			location(obstacle,_,_)
-			<- nearest(self, Nx, Ny).
+			<- 
+			?nearest(self, Nx, Ny);
+			!moveTo(Nx,Ny);
+			.send(Doctor,askOne,critical(Nx,Ny)).
 		
 		//If we have tried to start a rescue mission without knowing
 		// the scenario, wait until we have the scenario and try again
