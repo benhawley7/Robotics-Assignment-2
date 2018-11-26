@@ -7,20 +7,23 @@ import jason.environment.grid.GridWorldView;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.util.ArrayList;
 import java.util.logging.*;
+
+import Pathfinder.Node;
 
 public class ParamedicEnv extends Environment {
 	
     public static final int GSize = 6; // The bay is a 6x6 grid
     public static final int HOSPITAL  = 8; // hospital code in grid model
     public static final int VICTIM  = 16; // victim code in grid model
-    public static final int OBSTACLE = 32;
+//    public static final int OBSTACLE = 32;
 
     private Logger logger = Logger.getLogger("doctor2018."+ParamedicEnv.class.getName());
     
     // Create objects for visualising the bay.  
     // This is based on the Cleaning Robots code.
-//    private RobotBayModel model;
+    private RobotBayModel model;
 //    private RobotBayView view;    
     
     private MapGUI mapView;
@@ -30,7 +33,7 @@ public class ParamedicEnv extends Environment {
     public void init(String[] args) {
         super.init(args);
         //addPercept(ASSyntax.parseLiteral("percept(demo)"));
-//        model = new RobotBayModel();
+        model = new RobotBayModel();
 //        view  = new RobotBayView(model);
 //        model.setView(view);
         
@@ -44,21 +47,49 @@ public class ParamedicEnv extends Environment {
         	if (action.getFunctor().equals("addVictim")) {
                 int x = (int)((NumberTerm)action.getTerm(0)).solve();
                 int y = (int)((NumberTerm)action.getTerm(1)).solve();
-//                model.addVictim(x,y);
+                model.addVictim(x,y);
                 logger.info("adding victim at: "+x+","+y);
                 mapView.addVictim(x, y);
+                
             } else if (action.getFunctor().equals("addObstacle")) {
                 int x = (int)((NumberTerm)action.getTerm(0)).solve();
                 int y = (int)((NumberTerm)action.getTerm(1)).solve();
-//                model.addObstacle(x,y);
+                model.addObstacle(x,y);
                 logger.info("adding obstacle at: "+x+","+y);
                 mapView.addObstacle(x, y);
+                
             } else if (action.getFunctor().equals("addHospital")) {
                 int x = (int)((NumberTerm)action.getTerm(0)).solve();
                 int y = (int)((NumberTerm)action.getTerm(1)).solve();
-//                model.addHospital(x,y);
+                model.addHospital(x,y);
                 mapView.addHospital(x, y);
                 logger.info("adding hospital at: "+x+","+y);
+                
+            } else if (action.getFunctor().equals("nextTarget")) {
+            	int [] agentPos = model.getAgentPosition();
+            	ArrayList<int[]> potentialVictims = model.getPotentialVictimLocations();
+            	ArrayList<int[]> obstaclesPos = model.getObstacleLocations();
+            	
+            	Pathfinder p = new Pathfinder(GSize, GSize);
+            	
+            	// Josh Loves i lol
+            	for (int i = 0; i < obstaclesPos.size(); i++) {
+            		int[] obstaclePos = obstaclesPos.get(i);
+            		p.updateCell(obstaclePos[0], obstaclePos[1], true);
+            	}
+            	    
+            	int[] currentNearestPos = {-1, -1};
+            	int currentShortestLength = Integer.MAX_VALUE; 
+            	for (int j = 0; j < potentialVictims.size(); j++) {
+            		int[] victimLocation = potentialVictims.get(j);
+//            		Node[] path = p.getPath(agentPos[0], agentPos[1], victimLocation[0], victimLocation[1]);
+            		
+            		
+            	}
+            	
+            	
+            	
+            	
             } else {
                 logger.info("executing: "+action+", but not implemented!");
                 return true;
@@ -84,28 +115,73 @@ public class ParamedicEnv extends Environment {
     }
     
     // ======================================================================
-//    class RobotBayModel extends GridWorldModel {
-//
-//        private RobotBayModel() {
-//            super(GSize, GSize, 1);	// The third parameter is the number of agents
-//
-//            // initial location of Obstacles
-//            // Note that OBSTACLE is defined in the model (value 4), as
-//            // is AGENT (2), but we have to define our own code for the
-//            // victim and hospital (uses bitmaps, hence powers of 2)
-//        }
-//        
-//        void addVictim(int x, int y) {
-//            add(VICTIM, x, y);
-//        }
-//        void addHospital(int x, int y) {
-//            add(HOSPITAL, x, y);
-//        }
-//        void addObstacle(int x, int y) {
-//            add(OBSTACLE, x, y);
-//        }
-//
-//    }
+    class RobotBayModel extends GridWorldModel {
+
+        private RobotBayModel() {
+            super(GSize, GSize, 1);	// The third parameter is the number of agents
+
+            // initial location of Obstacles
+            // Note that OBSTACLE is defined in the model (value 4), as
+            // is AGENT (2), but we have to define our own code for the
+            // victim and hospital (uses bitmaps, hence powers of 2)
+        }
+        
+        public int[] getAgentPosition() {
+          	// Find the position of the agent
+        	for (int x = 0; x < GSize; x++) {
+        		for (int y = 0; y < GSize; y++) {
+        			if (model.getAgAtPos(x, y) == 1) {
+        				int[] agentPos = {x, y}; 
+        				return agentPos;
+        			}
+        		}
+        	}
+        	int[] agentPos = {-1, -1}; 
+			return agentPos;
+        }
+        
+        public ArrayList<int[]> getObstacleLocations() {
+          	// Find the position of the agent
+         	ArrayList<int[]> obstacles = new ArrayList<int[]>();
+        	for (int x = 0; x < GSize; x++) {
+        		for (int y = 0; y < GSize; y++) {
+        			if (model.hasObject(OBSTACLE, x, y) == true) {
+        				int[] victimPos = {x,y};
+        				obstacles.add(victimPos);
+        			}
+        		}
+        	}
+        	return obstacles;
+        }
+        
+        public ArrayList<int[]> getPotentialVictimLocations() {
+        	ArrayList<int[]> victims = new ArrayList<int[]>();
+        	for (int x = 0; x < GSize; x++) {
+        		for (int y = 0; y < GSize; y++) {
+        			if (model.hasObject(VICTIM, x, y) == true) {
+        				int[] victimPos = {x,y};
+        				victims.add(victimPos);
+        			}
+        		}
+        	}
+        	return victims;
+        }
+        
+        void addAgent(int x, int y) {
+        	add(AGENT, x, y);
+        }
+        
+        void addVictim(int x, int y) {
+            add(VICTIM, x, y);
+        }
+        void addHospital(int x, int y) {
+            add(HOSPITAL, x, y);
+        }
+        void addObstacle(int x, int y) {
+            add(OBSTACLE, x, y);
+        }
+
+    }
 //    
 //    // ======================================================================
 //    // This is a simple rendering of the map from the actions of the paramedic
