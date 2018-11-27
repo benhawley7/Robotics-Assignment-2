@@ -26,12 +26,12 @@ public class MapGUI {
 	private static final Color darkMagenta = new Color(139, 0, 139);
 	private static final Color indigo = new Color(75, 0, 130);
 
+	private static final Color darkRed = new Color(107, 0, 0);
+	private static final Color cyan = new Color(12, 195, 177);
+
 	private static int MAP_ROWS = 6;
 	private static int MAP_COLS = 6;
 
-	private float[][] map;
-	private int[] robotPosition;
-	private int[][] pathPositions;
 	private JLabel[][] labels = new JLabel[MAP_ROWS][MAP_COLS];
 	private JPanel[][] cells = new JPanel[MAP_ROWS][MAP_COLS];
 	private JFrame frame;
@@ -44,14 +44,6 @@ public class MapGUI {
 	 */
 	public static void main(String[] args) {
 
-		// Test Map Updating
-		float[][] exampleMap = new float[][] { { 0.9f, 0.1f, 0.2f, 0.3f, 0.4f, 1f }, { 1f, 1f, 1f, 0.8f, 1f, 1f },
-				{ 1f, 1f, 0.5f, 0.7f, 1f, 1f }, { 1f, 1f, 1f, 1f, 1f, 1f }, { 1f, 0.7f, 0.6f, 0.65f, 1f, 1f },
-				{ 0.8f, 0.8f, 1f, 1f, 1f, 1f }, { 1f, 1f, 1f, 0.9f, 0.97f, 0.2f }, };
-
-		int[] robotPosition = { 0, 0 };
-		int[][] pathPositions = { { 1, 1 }, { 1, 2 }, { 1, 3 } };
-
 		MapGUI mapGUI = new MapGUI();
 		try {
 			Thread.sleep(5000);
@@ -59,10 +51,6 @@ public class MapGUI {
 		} catch (Exception e) {
 		}
 
-		exampleMap[0][0] = 0.4f;
-		exampleMap[1][1] = 0.4f;
-		pathPositions[0][1] = 5;
-//        mapGUI.updateMap(exampleMap, robotPosition, pathPositions);
 
 	}
 
@@ -100,7 +88,7 @@ public class MapGUI {
 			}
 		});
 	}
-	
+
 	public void addObstacle(int x, int y) {
 		JPanel cell = cells[x][y];
 		JLabel label = labels[x][y];
@@ -109,6 +97,7 @@ public class MapGUI {
 		label.setFont(new Font("Arial", 1, 45));
 		label.setForeground(Color.WHITE);
 	}
+
 	public void addHospital(int x, int y) {
 		JPanel cell = cells[x][y];
 		JLabel label = labels[x][y];
@@ -117,10 +106,29 @@ public class MapGUI {
 		label.setFont(new Font("Arial", 1, 45));
 		label.setForeground(Color.WHITE);
 	}
+
 	public void addVictim(int x, int y) {
 		JPanel cell = cells[x][y];
 		JLabel label = labels[x][y];
 		cell.setBackground(Color.LIGHT_GRAY);
+		label.setText("V");
+		label.setFont(new Font("Arial", 1, 45));
+		label.setForeground(Color.WHITE);
+	}
+
+	public void addCriticalVictim(int x, int y) {
+		JPanel cell = cells[x][y];
+		JLabel label = labels[x][y];
+		cell.setBackground(darkRed);
+		label.setText("V");
+		label.setFont(new Font("Arial", 1, 45));
+		label.setForeground(Color.WHITE);
+	}
+
+	public void addNonCriticalVictim(int x, int y) {
+		JPanel cell = cells[x][y];
+		JLabel label = labels[x][y];
+		cell.setBackground(cyan);
 		label.setText("V");
 		label.setFont(new Font("Arial", 1, 45));
 		label.setForeground(Color.WHITE);
@@ -174,8 +182,6 @@ public class MapGUI {
 //		setRobotBorder(robotPosition[0], robotPosition[1]);
 //
 //	}
-	
-
 
 	public class MapPane extends JPanel {
 		/**
@@ -186,15 +192,10 @@ public class MapGUI {
 			// Make a Grid Layout of the size of the arena + the walls (2)
 			setLayout(new GridLayout(8, 8, 0, 0));
 
-			int[] hospitalPos = {};
-			int[][] obstaclePositions = {{}};
-			int[][] victimPositions = {{}};
+			// Set up a blank arena
+			for (int c = 7; c >= 0; c--) {
+				for (int r = 0; r < 8; r++) {
 
-			for (int r = 7; r >= 0; r--) {
-				for (int c = 0; c < 8; c++) {
-//                	String test = "R:" + r + ", C:" + c;
-//                	System.out.println(test);
-					// Create a new JPanel with desired dimensions
 					JPanel cell = new JPanel() {
 						@Override
 						public Dimension getPreferredSize() {
@@ -203,6 +204,7 @@ public class MapGUI {
 					};
 
 					cell.setBorder(new LineBorder(Color.BLACK, 2));
+
 					// If we are a border cell - make it dark gray
 					if (r == 0 || c == 0 || r == 7 || c == 7) {
 						cell.setBackground(Color.DARK_GRAY);
@@ -210,32 +212,6 @@ public class MapGUI {
 						// Otherwise we need to put a label with the probability in the cell
 						JLabel label = new JLabel();
 						label.setFont(new Font("Arial", 1, 30));
-
-//						// Is this the hospital cell?
-//						if (r == hospitalPos[0] + 1 && c == hospitalPos[1] + 1) {
-//							cell.setBackground(blue);
-//							label.setText("H");
-//							label.setFont(new Font("Arial", 1, 45));
-//							label.setForeground(Color.WHITE);
-//						}
-//
-//						for (int i = 0; i < obstaclePositions.length; i++) {
-//							if (r == obstaclePositions[i][0] + 1 && c == obstaclePositions[i][1] + 1) {
-//								cell.setBackground(Color.DARK_GRAY);
-//								label.setText("O");
-//								label.setFont(new Font("Arial", 1, 45));
-//								label.setForeground(Color.WHITE);
-//							}
-//						}
-//
-//						for (int i = 0; i < victimPositions.length; i++) {
-//							if (r == victimPositions[i][0] + 1 && c == victimPositions[i][1] + 1) {
-//								cell.setBackground(Color.LIGHT_GRAY);
-//								label.setText("V");
-//								label.setFont(new Font("Arial", 1, 45));
-//								label.setForeground(Color.WHITE);
-//							}
-//						}
 
 						cell.add(label);
 						labels[r - 1][c - 1] = label;
@@ -246,8 +222,6 @@ public class MapGUI {
 					add(cell);
 				}
 			}
-//            setPathBorders(pathPositions);
-//            setRobotBorder(robotPosition[0], robotPosition[1]);
 		}
 
 	}
