@@ -97,6 +97,10 @@ public class ParamedicEnv extends Environment {
             		}
             	}
             	
+            	Literal nearest = Literal.parseLiteral("nearest("+ currentNearestPos[0] + "," + currentNearestPos[1] + ")");
+            	
+            	addPercept("paramedic", nearest);
+            	
             	logger.info("Nearest Neighbour is" + currentNearestPos[0] + "," + currentNearestPos[1]);
             } else {
                 logger.info("executing: "+action+", but not implemented! Lel");
@@ -128,6 +132,12 @@ public class ParamedicEnv extends Environment {
         private RobotBayModel() {
             super(GSize, GSize, 1);	// The third parameter is the number of agents
 
+            
+            
+            setAgPos(0, 0, 0);
+            Literal location = Literal.parseLiteral("location(self, 0, 0)");
+            addPercept("paramedic", location);
+            
             // initial location of Obstacles
             // Note that OBSTACLE is defined in the model (value 4), as
             // is AGENT (2), but we have to define our own code for the

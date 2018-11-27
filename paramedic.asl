@@ -8,8 +8,7 @@
 	//Value of price doesn't matter as there is only one agent
 	price(_Service,X):- X = 1.
 	
-	location(self,0,0).
-	
+
 	//The doctor is playing the part of the initiator
 	plays(initiator,doctor).
 		
@@ -101,4 +100,5 @@
 			//TODO(): implement moveTo in environment
 			//.moveTo(X,Y); 
 			-location(self,_,_);
+			.print(X," ",Y);
 			+location(self,X,Y).
