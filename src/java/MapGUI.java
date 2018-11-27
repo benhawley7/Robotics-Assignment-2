@@ -4,6 +4,7 @@ import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.GridLayout;
+import java.util.ArrayList;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -88,6 +89,16 @@ public class MapGUI {
 			}
 		});
 	}
+	
+	public void setAgentLocation(int x, int y) {
+		System.out.println(labels.length);
+		System.out.println(x);
+		System.out.println(y);
+		JLabel label = labels[x][y];
+		System.out.println("Setting R location to" + x + "," + y);
+//		
+		label.setText("R");
+	}
 
 	public void addObstacle(int x, int y) {
 		JPanel cell = cells[x][y];
@@ -141,47 +152,24 @@ public class MapGUI {
 	 * @param ro array of x y position of the robot
 	 * @param p  2d array of x y positions for the path
 	 */
-//	public void updateMap(float[][] m, int[] ro, int[][] p) {
-//		map = m;
-//		robotPosition = ro;
-//		pathPositions = p;
-//		// Update the labels in the map
-//		for (int r = 0; r < 7; r++) {
-//			for (int c = 0; c < 6; c++) {
-//				cells[r][c].setBorder(new LineBorder(Color.BLACK, 2));
-//				// I can't remember the coloured corners right now so I'm guessing
-//				if (r == 0 && c == 0) {
-//					// Its a coloured cell
-//					cells[r][c].setBackground(blue);
-//					labels[r][c].setText(String.format("%.2f", map[r][c]));
-//				} else if (r == 0 && c == 5) {
-//					// Its a coloured cell
-//					cells[r][c].setBackground(green);
-//					labels[r][c].setText(String.format("%.2f", map[r][c]));
-//				} else if (r == 6 && c == 0) {
-//					// Its a coloured cell
-//					cells[r][c].setBackground(yellow);
-//					labels[r][c].setText(String.format("%.2f", map[r][c]));
-//				} else if (r == 6 && c == 5) {
-//					// Its a coloured cell
-//					cells[r][c].setBackground(red);
-//					labels[r][c].setText(String.format("%.2f", map[r][c]));
-//				} else {
-//					labels[r][c].setText(String.format("%.2f", map[r][c]));
-//					cells[r][c].setBackground(colorFromProbality(map[r][c]));
-//					if (map[r][c] > 0.5) {
-//						labels[r][c].setForeground(Color.WHITE);
-//					} else {
-//						labels[r][c].setForeground(Color.BLACK);
-//					}
-//				}
-//			}
-//		}
-//
-//		setPathBorders(pathPositions);
-//		setRobotBorder(robotPosition[0], robotPosition[1]);
-//
-//	}
+	public void updateMap(ArrayList<int[]> oL, int[] aL, ArrayList<int[]> vL, int[] hL ) {
+		ArrayList<int[]> obstacleLocations = oL;
+		int [] agentLocation = aL;
+		ArrayList<int[]> victimLocations = vL;
+		int [] hospitalLocation = hL;
+		
+		
+		addHospital(hospitalLocation[0], hospitalLocation[1]);
+		for (int i = 0; i < obstacleLocations.size(); i++) {
+			addObstacle(obstacleLocations.get(i)[0], obstacleLocations.get(i)[1]);
+		}
+		for (int i = 0; i < victimLocations.size(); i++) {
+			addVictim(victimLocations.get(i)[0], victimLocations.get(i)[1]);
+		}
+		
+
+		setAgentLocation(agentLocation[0], agentLocation[1]);
+	}
 
 	public class MapPane extends JPanel {
 		/**
@@ -212,10 +200,11 @@ public class MapGUI {
 						// Otherwise we need to put a label with the probability in the cell
 						JLabel label = new JLabel();
 						label.setFont(new Font("Arial", 1, 30));
-
-						cell.add(label);
+ 						cell.add(label);
 						labels[r - 1][c - 1] = label;
 						cells[r - 1][c - 1] = cell;
+						
+
 					}
 
 					// Add the cell to the container

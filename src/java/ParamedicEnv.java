@@ -34,12 +34,19 @@ public class ParamedicEnv extends Environment {
     public void init(String[] args) {
         super.init(args);
         //addPercept(ASSyntax.parseLiteral("percept(demo)"));
+       
         model = new RobotBayModel();
+        mapView = new MapGUI();
+//        
+//        int[] agentPos = model.getAgentPosition();
+//        int x = agentPos[0];
+//        int y = agentPos[1];
+//        mapView.setAgentLocation(x, y);
 //        view  = new RobotBayView(model);
 //        model.setView(view);
         
 
-        mapView = new MapGUI();
+        
     }
 
     @Override
@@ -50,27 +57,36 @@ public class ParamedicEnv extends Environment {
                 int y = (int)((NumberTerm)action.getTerm(1)).solve();
                 model.addVictim(x,y);
                 logger.info("adding victim at: "+x+","+y);
-                mapView.addVictim(x, y);
+                mapView.updateMap(model.getObstacleLocations(), model.getAgentPosition(), model.getPotentialVictimLocations(), model.getHospitalLocation());
+//                mapView.addVictim(x, y);
                 
-            } else if (action.getFunctor().equals("setAgentLocation")) {
-                int x = (int)((NumberTerm)action.getTerm(0)).solve();
-                int y = (int)((NumberTerm)action.getTerm(1)).solve();
-                model.addAgent(x,y);
-                logger.info("adding agent at: "+x+","+y);
             } else if (action.getFunctor().equals("addObstacle")) {
                 int x = (int)((NumberTerm)action.getTerm(0)).solve();
                 int y = (int)((NumberTerm)action.getTerm(1)).solve();
                 model.addObstacle(x,y);
                 logger.info("adding obstacle at: "+x+","+y);
-                mapView.addObstacle(x, y);
+                mapView.updateMap(model.getObstacleLocations(), model.getAgentPosition(), model.getPotentialVictimLocations(), model.getHospitalLocation());
+                //                mapView.addObstacle(x, y);
                 
             } else if (action.getFunctor().equals("addHospital")) {
                 int x = (int)((NumberTerm)action.getTerm(0)).solve();
                 int y = (int)((NumberTerm)action.getTerm(1)).solve();
                 model.addHospital(x,y);
-                mapView.addHospital(x, y);
+//                mapView.addHospital(x, y);
                 logger.info("adding hospital at: "+x+","+y);
+                mapView.updateMap(model.getObstacleLocations(), model.getAgentPosition(), model.getPotentialVictimLocations(), model.getHospitalLocation());
                 
+            } else if (action.getFunctor().equals("moveTo")) {
+                int x = (int)((NumberTerm)action.getTerm(0)).solve();
+                int y = (int)((NumberTerm)action.getTerm(1)).solve();
+                logger.info("Moving to " + x + ", " + y);
+                model.setAgPos(0, x, y);
+                int[] pos = {x, y};
+                logger.info("New Agent Pos: " + x + ", " + y);
+                mapView.updateMap(model.getObstacleLocations(), pos, model.getPotentialVictimLocations(), model.getHospitalLocation());
+                
+                return true;
+            	
             } else if (action.getFunctor().equals("nextTarget")) {
             	int [] agentPos = model.getAgentPosition();
             	logger.info("Agent Position: " + agentPos[0] + " " + agentPos[1]);
@@ -115,8 +131,13 @@ public class ParamedicEnv extends Environment {
         } catch (Exception e) {
             e.printStackTrace();
         }
-           
+        
+       
         informAgsEnvironmentChanged();
+        
+        
+        
+        logger.info("Updated Map");
         return true;       
     }
 
@@ -137,6 +158,7 @@ public class ParamedicEnv extends Environment {
             setAgPos(0, 0, 0);
             Literal location = Literal.parseLiteral("location(self, 0, 0)");
             addPercept("paramedic", location);
+            
             
             // initial location of Obstacles
             // Note that OBSTACLE is defined in the model (value 4), as
@@ -183,6 +205,11 @@ public class ParamedicEnv extends Environment {
         		}
         	}
         	return victims;
+        }
+        
+        public int[] getHospitalLocation() {
+        	int[] l = {0, 0};
+        	return l;
         }
         
         void addAgent(int x, int y) {
