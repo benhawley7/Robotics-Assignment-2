@@ -10,6 +10,8 @@ import java.awt.Graphics;
 import java.util.ArrayList;
 import java.util.logging.*;
 
+import jason.asSemantics.*;
+
 
 public class ParamedicEnv extends Environment {
 	

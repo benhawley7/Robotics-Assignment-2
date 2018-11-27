@@ -14,10 +14,14 @@
 	plays(initiator,doctor).
 	
 	nearest(self, Nx, Ny):-
-		.nextTarget(Nx,Ny)&
-		.print(Nx,Ny).
+		location(self, Sx, Sy)&
+		location(victim, Nx, Ny)&
+		location(victim, Lx, Ly)&
+		distance(Sx,Sy,Nx,Ny) <= distance(Sx,Sy,Lx,Ly)&
+		.print(Nx-Sx + Ny-Sy).
 		
-
+	distance(X1,Y1,X2,Y2,D):-
+		D= X1-X2+Y1-Y2.
 
 ///////////////////// Initial goals ///////////////////////////////////////////
 
@@ -75,17 +79,7 @@
 			<- .wait(2000);
 			   -+startRescueMission(D,C,NC).
 			   
-		+location(hospital,X,Y) <- 
-			.addHospital(X,Y);
-			.print(hospital,X,Y).
-			
-		+location(victim,X,Y) <- 
-			.addVictim(X,Y);
-			.print(victim,X,Y).
-			
-		+location(obstacle,X,Y) <- 
-			.addObstacle(X,Y);
-			.print(obstacle,X,Y).
+		+location(N,X,Y) <- .print(N,X,Y).
 		
 		
 			   
