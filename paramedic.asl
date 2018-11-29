@@ -65,10 +65,14 @@
 			location(obstacle,_,_)
 			<- 
 			
-			nextTarget(_);
+			nextTarget;
+			.print("next target found")
 			?nearest(X,Y);
 			!moveTo(X,Y);
-			.send(Doctor,tell, requestVictimStatus(X,Y,_));
+			getColour;
+			+colour(X,Y,burgandy);
+			?colour(X,Y,COLOUR);
+			.send(Doctor,tell, requestVictimStatus(X,Y,COLOUR));
 			.wait(2000);
 			+haveChecked(X,Y).
 		
@@ -76,7 +80,7 @@
 		// the scenario, wait until we have the scenario and try again
 		+rescue(D,C,NC)
 			<- .wait(2000);
-			   -+startRescueMission(D,C,NC).
+			   -+rescue(D,C,NC).
 			   
 		+location(hospital,X,Y) <- 
 			addHospital(X,Y);
@@ -91,13 +95,15 @@
 			.print(obstacle,X,Y).
 		
 		+nearest(X,Y): nearest(I,J) & not X=I & not Y = J<-
-			-nearest(I,J).
+			-nearest(I,J);
+			?nearest(A,B);
+			.print("Nearest: ",A,B).
 			
 		+critical(X,Y): location(self,X,Y) <-
 			pickUpVictim(X,Y);
 			+carryingVictim(critical);
 			-location(victim,X,Y);
-			noVictimAtLocation(X,Y);
+			removeVictim(X,Y);
 			-critical(X,Y);
 			!moveTo(0,0).
 			
@@ -115,7 +121,17 @@
 			
 		+haveChecked(X,Y): not critical(X,Y) <-
 			-location(victim,X,Y);
-			noVictimAtLocation(X,Y).
+			removeVictim(X,Y);
+			.print("No victim at ",X,Y);
+			nextTarget;
+			?nearest(A,B);
+			!moveTo(A,B);
+			getColour(X,Y);
+			+colour(X,Y,burgandy);
+			?colour(X,Y,COLOUR);
+			.send(Doctor,tell, requestVictimStatus(X,Y,COLOUR));
+			.wait(2000);
+			+haveChecked(X,Y).
 		
 			   
 	/*Plan Library for Goals */
@@ -129,6 +145,7 @@
 		+!moveTo(X,Y) <- 
 			//TODO(): implement moveTo in environment
 			moveTo(X,Y); 
-			-location(self,_,_);
 			.print(X," ",Y);
+			-location(self,_,_);
+			
 			+location(self,X,Y).
