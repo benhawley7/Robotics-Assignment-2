@@ -91,9 +91,6 @@ public class MapGUI {
 	}
 	
 	public void setAgentLocation(int x, int y) {
-		System.out.println(labels.length);
-		System.out.println(x);
-		System.out.println(y);
 		JLabel label = labels[x][y];
 		label.setText("R");
 	}
