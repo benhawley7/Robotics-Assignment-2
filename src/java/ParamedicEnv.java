@@ -33,53 +33,94 @@ public class ParamedicEnv extends Environment {
     @Override
     public void init(String[] args) {
         super.init(args);
-        //addPercept(ASSyntax.parseLiteral("percept(demo)"));
        
         model = new RobotBayModel();
         mapView = new MapGUI();
-//        
-//        int[] agentPos = model.getAgentPosition();
-//        int x = agentPos[0];
-//        int y = agentPos[1];
-//        mapView.setAgentLocation(x, y);
-//        view  = new RobotBayView(model);
-//        model.setView(view);
-        
-
-        
+ 
     }
 
     @Override
     public boolean executeAction(String agName, Structure action) {
         try {
         	if (action.getFunctor().equals("addVictim")) {
+        		// Get x and y terms
                 int x = (int)((NumberTerm)action.getTerm(0)).solve();
                 int y = (int)((NumberTerm)action.getTerm(1)).solve();
+                
+                // Add the victim to the Grid World Model
                 model.addVictim(x,y);
                 logger.info("adding victim at: "+x+","+y);
+                
+                // Update the map view
                 mapView.updateMap(model.getObstacleLocations(), model.getAgentPosition(), model.getPotentialVictimLocations(), model.getHospitalLocation());
-//                mapView.addVictim(x, y);
                 
             } else if (action.getFunctor().equals("addObstacle")) {
+            	// Get x and y terms
                 int x = (int)((NumberTerm)action.getTerm(0)).solve();
                 int y = (int)((NumberTerm)action.getTerm(1)).solve();
+                
+                // Add the obstacle to the Grid World Model
                 model.addObstacle(x,y);
                 logger.info("adding obstacle at: "+x+","+y);
+                
+                // Update the map view
                 mapView.updateMap(model.getObstacleLocations(), model.getAgentPosition(), model.getPotentialVictimLocations(), model.getHospitalLocation());
-                //                mapView.addObstacle(x, y);
                 
             } else if (action.getFunctor().equals("addHospital")) {
+            	// Get x and y terms
                 int x = (int)((NumberTerm)action.getTerm(0)).solve();
                 int y = (int)((NumberTerm)action.getTerm(1)).solve();
+                
+                // Add the hospital to the grid world model
                 model.addHospital(x,y);
-//                mapView.addHospital(x, y);
                 logger.info("adding hospital at: "+x+","+y);
+                
+                // Update the map view
                 mapView.updateMap(model.getObstacleLocations(), model.getAgentPosition(), model.getPotentialVictimLocations(), model.getHospitalLocation());
                 
             } else if (action.getFunctor().equals("moveTo")) {
+            	// Get x and y terms
                 int x = (int)((NumberTerm)action.getTerm(0)).solve();
                 int y = (int)((NumberTerm)action.getTerm(1)).solve();
                 logger.info("Moving to " + x + ", " + y);
+                
+                // Create a new pathfinder
+                Pathfinder p = new Pathfinder(GSize, GSize);
+                
+                // Update the pathfinder with the obstacle locations
+                ArrayList<int[]> obstaclesPos = model.getObstacleLocations();
+            	for (int i = 0; i < obstaclesPos.size(); i++) {
+            		int[] obstaclePos = obstaclesPos.get(i);
+            		p.updateCell(obstaclePos[0], obstaclePos[1], true);
+            	}
+            	
+            	// Get the current position of the agent
+            	int[] agentPos = model.getAgentPosition();
+  
+            	// Get the path from the agent to the target location
+            	Pathfinder.Node[] path = p.getPath(agentPos[0], agentPos[1], x, y);
+            
+            	// Go through the path, starts at 1 because index 0 is null for some reason
+                for (int i = 1; i < path.length - 1; i++) {
+
+                	/**
+                	 * 
+                	 * 
+                	 * Here is where we will send the move command to the EV3
+                	 * 
+                	 * 
+                	 */
+                	
+                	// Update the agents position to the next move
+                	model.setAgPos(0, path[i].x, path[i].y);
+                	
+                	// Update the map with the new location
+                	mapView.updateMap(model.getObstacleLocations(), model.getAgentPosition(), model.getPotentialVictimLocations(), model.getHospitalLocation());
+                	
+                	// Sleep for testing purposes
+                	Thread.sleep(1000);
+                }
+	
                 model.setAgPos(0, x, y);
                 int[] pos = {x, y};
                 logger.info("New Agent Pos: " + x + ", " + y);

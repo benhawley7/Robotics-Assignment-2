@@ -93,6 +93,8 @@ public class MapGUI {
 	public void setAgentLocation(int x, int y) {
 		JLabel label = labels[x][y];
 		label.setText("R");
+		JPanel cell = cells[x][y];
+		cell.setBorder(new LineBorder(cyan, 4));
 	}
 
 	public void addObstacle(int x, int y) {
@@ -139,7 +141,16 @@ public class MapGUI {
 		label.setFont(new Font("Arial", 1, 45));
 		label.setForeground(Color.WHITE);
 	}
-
+	
+	public void removeCellFormatting(int x, int y) {
+		JPanel cell = cells[x][y];
+		JLabel label = labels[x][y];
+		cell.setBackground(Color.WHITE);
+		label.setText("");
+		label.setFont(new Font("Arial", 1, 45));
+		label.setForeground(Color.WHITE);
+		cell.setBorder(new LineBorder(Color.BLACK, 2));
+	}
 	/**
 	 * updateMap() Update the map with new values, robot and path positions
 	 * 
@@ -148,11 +159,19 @@ public class MapGUI {
 	 * @param p  2d array of x y positions for the path
 	 */
 	public void updateMap(ArrayList<int[]> oL, int[] aL, ArrayList<int[]> vL, int[] hL ) {
+		
+		
 		ArrayList<int[]> obstacleLocations = oL;
 		int [] agentLocation = aL;
 		ArrayList<int[]> victimLocations = vL;
 		int [] hospitalLocation = hL;
 		
+		
+		for (int i = 0; i < MAP_ROWS; i++) {
+			for (int j = 0; j < MAP_COLS; j++) {
+				removeCellFormatting(i, j);
+			}
+		}
 		
 		addHospital(hospitalLocation[0], hospitalLocation[1]);
 		for (int i = 0; i < obstacleLocations.size(); i++) {
