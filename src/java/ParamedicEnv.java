@@ -84,8 +84,6 @@ public class ParamedicEnv extends Environment {
                 int[] pos = {x, y};
                 logger.info("New Agent Pos: " + x + ", " + y);
                 mapView.updateMap(model.getObstacleLocations(), pos, model.getPotentialVictimLocations(), model.getHospitalLocation());
-                
-                return true;
             	
             } else if (action.getFunctor().equals("nextTarget")) {
             	int [] agentPos = model.getAgentPosition();
@@ -118,6 +116,24 @@ public class ParamedicEnv extends Environment {
             	addPercept("paramedic", nearest);
             	
             	logger.info("Nearest Neighbour is" + currentNearestPos[0] + "," + currentNearestPos[1]);
+            } else if (action.getFunctor().equals("removeVictim")) {
+                int x = (int)((NumberTerm)action.getTerm(0)).solve();
+                int y = (int)((NumberTerm)action.getTerm(1)).solve();
+                model.removeVictim(x, y);
+                mapView.updateMap(model.getObstacleLocations(), model.getAgentPosition(), model.getPotentialVictimLocations(), model.getHospitalLocation());
+                
+            } else if (action.getFunctor().equals("pickUpVictim")) {
+                int x = (int)((NumberTerm)action.getTerm(0)).solve();
+                int y = (int)((NumberTerm)action.getTerm(1)).solve();
+            	model.removeVictim(x, y);
+            	
+            	// Update GUI to show that we are holding a victim
+            	
+            } else if (action.getFunctor().equals("putDownVictim")) {
+            	// Reset the GUI to show we have put down a victim            	
+            } else if (action.getFunctor().equals("finishRescueMission")) {
+            	// Finish the mission
+            	
             } else {
                 logger.info("executing: "+action+", but not implemented! Lel");
                 return true;
@@ -134,9 +150,7 @@ public class ParamedicEnv extends Environment {
         
        
         informAgsEnvironmentChanged();
-        
-        
-        
+
         logger.info("Updated Map");
         return true;       
     }
@@ -149,21 +163,14 @@ public class ParamedicEnv extends Environment {
     
     // ======================================================================
     class RobotBayModel extends GridWorldModel {
-
+     	
         private RobotBayModel() {
             super(GSize, GSize, 1);	// The third parameter is the number of agents
-
-            
-            
+    
             setAgPos(0, 0, 0);
             Literal location = Literal.parseLiteral("location(self, 0, 0)");
             addPercept("paramedic", location);
-            
-            
-            // initial location of Obstacles
-            // Note that OBSTACLE is defined in the model (value 4), as
-            // is AGENT (2), but we have to define our own code for the
-            // victim and hospital (uses bitmaps, hence powers of 2)
+
         }
         
         public int[] getAgentPosition() {
@@ -225,48 +232,10 @@ public class ParamedicEnv extends Environment {
         void addObstacle(int x, int y) {
             add(OBSTACLE, x, y);
         }
+        
+        void removeVictim(int x, int y) {
+        	remove(VICTIM, x, y);
+        }
 
     }
-//    
-//    // ======================================================================
-//    // This is a simple rendering of the map from the actions of the paramedic
-//    // when getting details of the victim and obstacle locations
-//    // You should not feel that you should use this code, but it can be used to
-//    // visualise the bay layout, especially in the early parts of your solution.
-//    // However, you should implement your own code to visualise the map.
-//    class RobotBayView extends GridWorldView {
-//
-//        public RobotBayView(RobotBayModel model) {
-//            super(model, "COMP329 6x6 Robot Bay", 300);
-//            defaultFont = new Font("Arial", Font.BOLD, 18); // change default font
-//            setVisible(true);
-//            repaint();
-//        }
-//        
-//        /** draw application objects */
-//        @Override
-//        public void draw(Graphics g, int x, int y, int object) {
-//            switch (object) {
-//            case ParamedicEnv.VICTIM:
-//                drawVictim(g, x, y);
-//                break;
-//            case ParamedicEnv.HOSPITAL:
-//                drawHospital(g, x, y);
-//                break;
-//           }
-//        }
-//        
-//        public void drawVictim(Graphics g, int x, int y) {
-//            //super.drawObstacle(g, x, y);
-//            g.setColor(Color.black);
-//            drawString(g, x, y, defaultFont, "V");
-//        }
-//
-//        public void drawHospital(Graphics g, int x, int y) {
-//            //super.drawObstacle(g, x, y);
-//            g.setColor(Color.blue);
-//            drawString(g, x, y, defaultFont, "H");
-//        }
-//    }
-//    // ======================================================================
 }

@@ -95,8 +95,6 @@ public class MapGUI {
 		System.out.println(x);
 		System.out.println(y);
 		JLabel label = labels[x][y];
-		System.out.println("Setting R location to" + x + "," + y);
-//		
 		label.setText("R");
 	}
 
