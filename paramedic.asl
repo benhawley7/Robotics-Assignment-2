@@ -43,7 +43,7 @@
 		+accept_proposal(CNPId)[source(A)]
 			: proposal(CNPId,Task,C,NC,Offer)
 			<- !getScenario(A);
-				+startRescueMission(A,C,NC).
+				+rescue(A,C,NC).
 		
 		//When this agent knows its proposal has been rejected
 		//Clear its proposal
@@ -56,14 +56,15 @@
 		
 		//When a rescue mission has been started, and there is a hospital,
 		//a victim and an obstacle:
-		+startRescueMission(Doctor,0,0)<-
+		+rescue(Doctor,0,0)<-
 			.print("Complete").
 		
-		+startRescueMission(Doctor,Critical,NonCritical): 
+		+rescue(Doctor,Critical,NonCritical): 
 			location(hospital,_,_) & 
 			location(victim,_,_) &
 			location(obstacle,_,_)
 			<- 
+			
 			nextTarget(_);
 			?nearest(X,Y);
 			!moveTo(X,Y);
@@ -73,7 +74,7 @@
 		
 		//If we have tried to start a rescue mission without knowing
 		// the scenario, wait until we have the scenario and try again
-		+startRescueMission(D,C,NC)
+		+rescue(D,C,NC)
 			<- .wait(2000);
 			   -+startRescueMission(D,C,NC).
 			   
@@ -93,28 +94,28 @@
 			-nearest(I,J).
 			
 		+critical(X,Y): location(self,X,Y) <-
-			pickUp(X,Y);
+			pickUpVictim(X,Y);
 			+carryingVictim(critical);
 			-location(victim,X,Y);
-			removeVictim(X,Y);
+			noVictimAtLocation(X,Y);
 			-critical(X,Y);
 			!moveTo(0,0).
 			
 		+location(self,0,0): carryingVictim(critical) <-
-			putDown;
+			putDownVictim;
 			-carryingVictim(_);
 			-startRescueMission(Doctor,Critical,NonCritical);
 			+startRescueMission(Doctor,Critical-1,NonCritical).
 		
 		+location(self,0,0): carryingVictim(nonCritical) <-
-			putDown;
+			putDownVictim;
 			-carryingVictim(_);
 			-startRescueMission(Doctor,Critical,NonCritical);
 			+startRescueMission(Doctor,Critical,NonCritical-1).
 			
 		+haveChecked(X,Y): not critical(X,Y) <-
 			-location(victim,X,Y);
-			removeVictim(X,Y).
+			noVictimAtLocation(X,Y).
 		
 			   
 	/*Plan Library for Goals */

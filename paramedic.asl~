@@ -8,8 +8,7 @@
 	//Value of price doesn't matter as there is only one agent
 	price(_Service,X):- X = 1.
 	
-	location(self,0,0).
-	
+
 	//The doctor is playing the part of the initiator
 	plays(initiator,doctor).
 		
@@ -29,7 +28,8 @@
 		//When this agent knows who plays the part of initiator
 		//Introduce this agent to the initiator as a participant
 		+plays(initiator, In): .my_name(Me)
-			<- .send(In,tell,introduction(participant,Me)).
+			<- .send(In,tell,introduction(participant,Me));
+			.print("Intro done").
 		
 		//When this agent knows there is a Call For Proposal, respond to it
 		+cfp(CNPId,Task,C,NC)[source(A)]
@@ -56,15 +56,20 @@
 		
 		//When a rescue mission has been started, and there is a hospital,
 		//a victim and an obstacle:
+		+startRescueMission(Doctor,0,0)<-
+			.print("Complete").
+		
 		+startRescueMission(Doctor,Critical,NonCritical): 
 			location(hospital,_,_) & 
 			location(victim,_,_) &
 			location(obstacle,_,_)
 			<- 
 			nextTarget(_);
-			?nearest(Nx,Ny);
-			!moveTo(Nx,Ny);
-			.send(Doctor,askOne,critical(Nx,Ny)).
+			?nearest(X,Y);
+			!moveTo(X,Y);
+			.send(Doctor,tell, requestVictimStatus(X,Y,_));
+			.wait(2000);
+			+haveChecked(X,Y).
 		
 		//If we have tried to start a rescue mission without knowing
 		// the scenario, wait until we have the scenario and try again
@@ -87,6 +92,29 @@
 		+nearest(X,Y): nearest(I,J) & not X=I & not Y = J<-
 			-nearest(I,J).
 			
+		+critical(X,Y): location(self,X,Y) <-
+			pickUp(X,Y);
+			+carryingVictim(critical);
+			-location(victim,X,Y);
+			removeVictim(X,Y);
+			-critical(X,Y);
+			!moveTo(0,0).
+			
+		+location(self,0,0): carryingVictim(critical) <-
+			putDown;
+			-carryingVictim(_);
+			-startRescueMission(Doctor,Critical,NonCritical);
+			+startRescueMission(Doctor,Critical-1,NonCritical).
+		
+		+location(self,0,0): carryingVictim(nonCritical) <-
+			putDown;
+			-carryingVictim(_);
+			-startRescueMission(Doctor,Critical,NonCritical);
+			+startRescueMission(Doctor,Critical,NonCritical-1).
+			
+		+haveChecked(X,Y): not critical(X,Y) <-
+			-location(victim,X,Y);
+			removeVictim(X,Y).
 		
 			   
 	/*Plan Library for Goals */
@@ -99,6 +127,7 @@
 		//update our position
 		+!moveTo(X,Y) <- 
 			//TODO(): implement moveTo in environment
-			//.moveTo(X,Y); 
+			moveTo(X,Y); 
 			-location(self,_,_);
+			.print(X," ",Y);
 			+location(self,X,Y).
