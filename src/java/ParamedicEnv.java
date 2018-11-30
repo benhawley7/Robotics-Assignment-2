@@ -25,7 +25,7 @@ public class ParamedicEnv extends Environment {
     private MapGUI mapView;
     private Client client;
     
-    private boolean isSimulatorMode = false;
+    private boolean isSimulatorMode = true;
 
     /** Called before the MAS execution with the args informed in .mas2j */
     @Override
@@ -184,20 +184,12 @@ public class ParamedicEnv extends Environment {
 //                ~critical(5,1).
                 
                 if (x == 2 && y == 3) {
-                	// Critical
-                	model.addCritical(x, y);
-                	
                     Literal location = Literal.parseLiteral("colour(" + x + "," + y + ", burgandy)");
                     addPercept("paramedic", location);
-	
                 } else if (x == 4 && y == 5) {
-                	// Not Critical
-                	model.addNonCritical(x, y);
                     Literal location = Literal.parseLiteral("colour(" + x + "," + y + ", cyan)");
                     addPercept("paramedic", location);
                 } else if (x == 5 && y == 1) {
-                	// Not Critical
-                	model.addNonCritical(x, y);
                     Literal location = Literal.parseLiteral("colour(" + x + "," + y + ", cyan)");
                     addPercept("paramedic", location);
                 } else {
@@ -230,24 +222,48 @@ public class ParamedicEnv extends Environment {
 //            		}
 //            	}
             	
-            } else if (action.getFunctor().equals("removeVictim")) {
+            } else if (action.getFunctor().equals("noVictimAt")) {
                 int x = (int)((NumberTerm)action.getTerm(0)).solve();
                 int y = (int)((NumberTerm)action.getTerm(1)).solve();
                 model.removeVictim(x, y);
                 mapView.updateMap(model);
                 
-            } else if (action.getFunctor().equals("pickUpVictim")) {
+            } else if (action.getFunctor().equals("criticalVictimAt")) {
                 int x = (int)((NumberTerm)action.getTerm(0)).solve();
                 int y = (int)((NumberTerm)action.getTerm(1)).solve();
             	model.removeVictim(x, y);
+                model.addCritical(x, y);
+            	
+            	mapView.updateMap(model);
+            	
+            } else if (action.getFunctor().equals("nonCriticalVictimAt")) {
+                int x = (int)((NumberTerm)action.getTerm(0)).solve();
+                int y = (int)((NumberTerm)action.getTerm(1)).solve();
+                model.removeVictim(x, y);
+             	model.addNonCritical(x, y);
+            	mapView.updateMap(model);
+            } else if (action.getFunctor().equals("pickUpVictim")) {
+                int x = (int)((NumberTerm)action.getTerm(0)).solve();
+                int y = (int)((NumberTerm)action.getTerm(1)).solve();
+                
+                int victimType = model.getVictimType(x, y);
+            	model.remove(victimType, x, y);
+            	
+            	if (victimType == CRITICAL) {
+            		model.carryingCritical = true;
+            	} else {
+            		model.carryingNonCritical = true;
+            	}
+            	
             	mapView.updateMap(model);
             	
             	// Update GUI to show that we are holding a victim
             	
             } else if (action.getFunctor().equals("putDownVictim")) {
-            	// Reset the GUI to show we have put down a victim     
-            	
-            	
+            	// Reset the GUI to show we have put down a victim
+            	model.carryingCritical = false;
+            	model.carryingNonCritical = false;
+
             } else if (action.getFunctor().equals("finishRescueMission")) {
             	// Finish the mission
             	
@@ -286,6 +302,9 @@ public class ParamedicEnv extends Environment {
             addPercept("paramedic", location);
 
         }
+        
+        public boolean carryingCritical = false;
+        public boolean carryingNonCritical = false;
         
         public int[] getAgentPosition() {
         	int[] agentPos = {-1, -1};
@@ -341,6 +360,15 @@ public class ParamedicEnv extends Environment {
         	return locations;
         }
         
+        public int getVictimType(int x, int y) {
+        	if (hasObject(CRITICAL, x, y) == true) {
+        		return CRITICAL;
+        	}
+        	if (hasObject(NONCRITICAL, x, y) == true) {
+        		return NONCRITICAL;
+        	}
+        	return 0;
+         }
         
         public int[] getHospitalLocation() {
         	int[] l = {0, 0};
@@ -364,6 +392,7 @@ public class ParamedicEnv extends Environment {
         void removeVictim(int x, int y) {
         	remove(VICTIM, x, y);
         }
+        
         
         void addCritical(int x, int y) {
         	add(CRITICAL, x, y);

@@ -91,11 +91,20 @@ public class MapGUI {
 		});
 	}
 	
-	public void setAgentLocation(int x, int y) {
+	public void setAgentLocation(int x, int y, int c) {
 		JLabel label = labels[x][y];
 		label.setText("R");
 		JPanel cell = cells[x][y];
 		cell.setBorder(new LineBorder(cyan, 4));
+		
+		
+		if (c == 1) {
+			cell.setBackground(darkRed);
+		} else if (c == 2) {
+			cell.setBackground(cyan);
+		}
+		
+		
 		if (cell.getBackground() == Color.WHITE) {
 			label.setForeground(Color.DARK_GRAY);
 		}
@@ -162,7 +171,7 @@ public class MapGUI {
 	 * @param ro array of x y position of the robot
 	 * @param p  2d array of x y positions for the path
 	 */
-	public void updateMap(ArrayList<int[]> oL, int[] aL, ArrayList<int[]> vL, int[] hL, ArrayList<int[]> cL, ArrayList<int[]> nL) {
+	public void updateMap(ArrayList<int[]> oL, int[] aL, ArrayList<int[]> vL, int[] hL, ArrayList<int[]> cL, ArrayList<int[]> nL, int c) {
 		
 		
 		ArrayList<int[]> obstacleLocations = oL;
@@ -172,6 +181,8 @@ public class MapGUI {
 		
 		ArrayList<int[]> criticalLocations = cL;
 		ArrayList<int[]> nonCriticalLocations = nL;
+		
+		int carrying = c;
 		
 		// Remove Cell Formatting  - can cause interface flashing but fixing this isn't a priority.
 		for (int x = 0; x < MAP_ROWS; x++) {
@@ -204,7 +215,7 @@ public class MapGUI {
 		}
 		
 		// Set the current agent location
-		setAgentLocation(agentLocation[0], agentLocation[1]);
+		setAgentLocation(agentLocation[0], agentLocation[1], carrying);
 	}
 	
 	public void updateMap(ParamedicEnv.RobotBayModel model) {
@@ -217,7 +228,14 @@ public class MapGUI {
 		ArrayList<int[]> criticalLocations = model.getLocations(ParamedicEnv.CRITICAL);
 		ArrayList<int[]> nonCriticalLocations = model.getLocations(ParamedicEnv.NONCRITICAL);
 		
-		updateMap(obstacleLocations, agentLocation, victimLocations, hospitalLocation, criticalLocations, nonCriticalLocations);
+		int carrying = 0;
+		if (model.carryingCritical == true) {
+			carrying = 1;
+		} else if (model.carryingNonCritical == true) {
+			carrying = 2;
+		}
+		
+		updateMap(obstacleLocations, agentLocation, victimLocations, hospitalLocation, criticalLocations, nonCriticalLocations, carrying);
 	}
 
 	public class MapPane extends JPanel {
