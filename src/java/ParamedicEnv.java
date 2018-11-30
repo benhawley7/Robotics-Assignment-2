@@ -227,14 +227,15 @@ public class ParamedicEnv extends Environment {
                 int y = (int)((NumberTerm)action.getTerm(1)).solve();
                 model.removeVictim(x, y);
                 mapView.updateMap(model);
+                Thread.sleep(500);
                 
             } else if (action.getFunctor().equals("criticalVictimAt")) {
                 int x = (int)((NumberTerm)action.getTerm(0)).solve();
                 int y = (int)((NumberTerm)action.getTerm(1)).solve();
             	model.removeVictim(x, y);
                 model.addCritical(x, y);
-            	
             	mapView.updateMap(model);
+            	Thread.sleep(500);
             	
             } else if (action.getFunctor().equals("nonCriticalVictimAt")) {
                 int x = (int)((NumberTerm)action.getTerm(0)).solve();
@@ -242,6 +243,7 @@ public class ParamedicEnv extends Environment {
                 model.removeVictim(x, y);
              	model.addNonCritical(x, y);
             	mapView.updateMap(model);
+            	Thread.sleep(500);
             } else if (action.getFunctor().equals("pickUpVictim")) {
                 int x = (int)((NumberTerm)action.getTerm(0)).solve();
                 int y = (int)((NumberTerm)action.getTerm(1)).solve();
@@ -256,13 +258,13 @@ public class ParamedicEnv extends Environment {
             	}
             	
             	mapView.updateMap(model);
-            	
-            	// Update GUI to show that we are holding a victim
+            	Thread.sleep(500);
             	
             } else if (action.getFunctor().equals("putDownVictim")) {
             	// Reset the GUI to show we have put down a victim
             	model.carryingCritical = false;
             	model.carryingNonCritical = false;
+            	mapView.updateMap(model);
 
             } else if (action.getFunctor().equals("finishRescueMission")) {
             	// Finish the mission
