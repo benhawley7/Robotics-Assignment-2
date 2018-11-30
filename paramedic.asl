@@ -43,7 +43,7 @@
 		+accept_proposal(CNPId)[source(A)]
 			: proposal(CNPId,Task,C,NC,Offer)
 			<- !getScenario(A);
-				+rescue(A,C,NC).
+				+rescueMission(A,C,NC).
 		
 		//When this agent knows its proposal has been rejected
 		//Clear its proposal
@@ -56,10 +56,7 @@
 		
 		//When a rescue mission has been started, and there is a hospital,
 		//a victim and an obstacle:
-		+rescue(Doctor,0,0)<-
-			.print("Complete").
-		
-		+rescue(Doctor,Critical,NonCritical): 
+		+rescueMission(Doctor,Critical,NonCritical): 
 			location(hospital,_,_) & 
 			location(victim,_,_) &
 			location(obstacle,_,_)
@@ -68,19 +65,13 @@
 			nextTarget;
 			.print("next target found")
 			?nearest(X,Y);
-			!moveTo(X,Y);
-			getColour;
-			+colour(X,Y,burgandy);
-			?colour(X,Y,COLOUR);
-			.send(Doctor,tell, requestVictimStatus(X,Y,COLOUR));
-			.wait(2000);
-			+haveChecked(X,Y).
+			!rescue(X,Y).
 		
 		//If we have tried to start a rescue mission without knowing
 		// the scenario, wait until we have the scenario and try again
-		+rescue(D,C,NC)
+		+rescueMission(D,C,NC)
 			<- .wait(2000);
-			   -+rescue(D,C,NC).
+			   -+rescueMission(D,C,NC).
 			   
 		+location(hospital,X,Y) <- 
 			addHospital(X,Y);
@@ -125,13 +116,8 @@
 			.print("No victim at ",X,Y);
 			nextTarget;
 			?nearest(A,B);
-			!moveTo(A,B);
-			getColour(X,Y);
-			+colour(X,Y,burgandy);
-			?colour(X,Y,COLOUR);
-			.send(Doctor,tell, requestVictimStatus(X,Y,COLOUR));
-			.wait(2000);
-			+haveChecked(X,Y).
+			!rescue(A,B).
+			
 		
 			   
 	/*Plan Library for Goals */
@@ -139,6 +125,16 @@
 		//When this agent wants to get the scenario
 		//Ask the doctor for the location of all victims
 		+!getScenario(D) <- .send(D,askAll,location(_,_,_)).
+		
+		+!rescue(X,Y)<-
+			!moveTo(X,Y);
+			getColour(X,Y);
+			+colour(X,Y,burgandy);
+			?colour(X,Y,COLOUR);
+			?plays(initiator,D);
+			.send(D,tell, requestVictimStatus(X,Y,COLOUR));
+			.wait(2000);
+			+haveChecked(X,Y).
 		
 		//When we want to move somewhere, move there and
 		//update our position

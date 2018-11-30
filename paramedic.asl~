@@ -43,7 +43,7 @@
 		+accept_proposal(CNPId)[source(A)]
 			: proposal(CNPId,Task,C,NC,Offer)
 			<- !getScenario(A);
-				+startRescueMission(A,C,NC).
+				+rescue(A,C,NC).
 		
 		//When this agent knows its proposal has been rejected
 		//Clear its proposal
@@ -56,26 +56,31 @@
 		
 		//When a rescue mission has been started, and there is a hospital,
 		//a victim and an obstacle:
-		+startRescueMission(Doctor,0,0)<-
+		+rescue(Doctor,0,0)<-
 			.print("Complete").
 		
-		+startRescueMission(Doctor,Critical,NonCritical): 
+		+rescue(Doctor,Critical,NonCritical): 
 			location(hospital,_,_) & 
 			location(victim,_,_) &
 			location(obstacle,_,_)
 			<- 
-			nextTarget(_);
+			
+			nextTarget;
+			.print("next target found")
 			?nearest(X,Y);
 			!moveTo(X,Y);
-			.send(Doctor,tell, requestVictimStatus(X,Y,_));
+			getColour;
+			+colour(X,Y,burgandy);
+			?colour(X,Y,COLOUR);
+			.send(Doctor,tell, requestVictimStatus(X,Y,COLOUR));
 			.wait(2000);
 			+haveChecked(X,Y).
 		
 		//If we have tried to start a rescue mission without knowing
 		// the scenario, wait until we have the scenario and try again
-		+startRescueMission(D,C,NC)
+		+rescue(D,C,NC)
 			<- .wait(2000);
-			   -+startRescueMission(D,C,NC).
+			   -+rescue(D,C,NC).
 			   
 		+location(hospital,X,Y) <- 
 			addHospital(X,Y);
@@ -90,10 +95,12 @@
 			.print(obstacle,X,Y).
 		
 		+nearest(X,Y): nearest(I,J) & not X=I & not Y = J<-
-			-nearest(I,J).
+			-nearest(I,J);
+			?nearest(A,B);
+			.print("Nearest: ",A,B).
 			
 		+critical(X,Y): location(self,X,Y) <-
-			pickUp(X,Y);
+			pickUpVictim(X,Y);
 			+carryingVictim(critical);
 			-location(victim,X,Y);
 			removeVictim(X,Y);
@@ -101,20 +108,30 @@
 			!moveTo(0,0).
 			
 		+location(self,0,0): carryingVictim(critical) <-
-			putDown;
+			putDownVictim;
 			-carryingVictim(_);
 			-startRescueMission(Doctor,Critical,NonCritical);
 			+startRescueMission(Doctor,Critical-1,NonCritical).
 		
 		+location(self,0,0): carryingVictim(nonCritical) <-
-			putDown;
+			putDownVictim;
 			-carryingVictim(_);
 			-startRescueMission(Doctor,Critical,NonCritical);
 			+startRescueMission(Doctor,Critical,NonCritical-1).
 			
 		+haveChecked(X,Y): not critical(X,Y) <-
 			-location(victim,X,Y);
-			removeVictim(X,Y).
+			removeVictim(X,Y);
+			.print("No victim at ",X,Y);
+			nextTarget;
+			?nearest(A,B);
+			!moveTo(A,B);
+			getColour(X,Y);
+			+colour(X,Y,burgandy);
+			?colour(X,Y,COLOUR);
+			.send(Doctor,tell, requestVictimStatus(X,Y,COLOUR));
+			.wait(2000);
+			+haveChecked(X,Y).
 		
 			   
 	/*Plan Library for Goals */
@@ -128,6 +145,7 @@
 		+!moveTo(X,Y) <- 
 			//TODO(): implement moveTo in environment
 			moveTo(X,Y); 
-			-location(self,_,_);
 			.print(X," ",Y);
+			-location(self,_,_);
+			
 			+location(self,X,Y).
