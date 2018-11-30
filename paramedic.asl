@@ -55,6 +55,14 @@
 	
 	/*Plan Library for Beliefs */
 		
+		-carrying(_):
+			rescueMission(Critical,NonCritical)&
+			Critical = 0 &
+			NonCritical = 0&
+			~carryingVictim(_)
+			<-
+			allRescued.
+	
 		//When a rescue mission has been started, and there is a hospital,
 		//a victim and an obstacle:
 		+rescueMission(Critical,NonCritical): 
@@ -99,8 +107,19 @@
 			-critical(X,Y);
 			!moveTo(0,0).
 		
-		+~critical(X,Y)<-
-			nonCriticalVictimAt(X,Y).
+		+~critical(X,Y): 
+			location(self,X,Y)&
+			rescueMission(C,NC)&
+			C=0
+			<-
+			.print("Non critical found");
+			nonCriticalVictimAt(X,Y);
+			pickUpVictim(X,Y);
+			
+			+carryingVictim(~critical);
+			-location(victim,X,Y);
+			-~critical(X,Y);
+			!moveTo(0,0).
 			
 		+location(self,0,0): carryingVictim(S) <-
 			putDownVictim;
@@ -125,7 +144,6 @@
 		+!rescue(X,Y)<-
 			!moveTo(X,Y);
 			inspectVictim(X,Y);
-			+colour(X,Y,burgandy);
 			?colour(X,Y,COLOUR);
 			?plays(initiator,D);
 			.send(D,tell, requestVictimStatus(X,Y,COLOUR)).

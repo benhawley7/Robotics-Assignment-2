@@ -118,7 +118,7 @@ public class ParamedicEnv extends Environment {
             	Pathfinder.Node[] path = p.getPath(agentPos[0], agentPos[1], x, y);
             
             	// Go through the path, starts at 1 because index 0 is null for some reason
-                for (int i = 1; i < path.length; i++) {
+                for (int i = 0; i < path.length; i++) {
 
                 	if (isSimulatorMode == false) {
                     	/**
