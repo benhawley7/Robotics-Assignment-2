@@ -10,26 +10,25 @@ import java.net.*;
  */
 public class Client {
 	
-	private String ip = "192.168.70.187"; 
+//	private String ip = "192.168.70.187"; 
+	private String ip = "127.0.0.1"; 
 	private int port = 1234;
 	public boolean connected = false;
 	private Socket sock = null;
 	
 	public Client() throws IOException, InterruptedException {
-		do {
-			connectToRobot();
-		} while (connected == false);
-		
+		connectToRobot();
 	}
 	
 	public void connectToRobot() throws InterruptedException {
 		try {
 			sock = new Socket(ip, port);
-			System.out.print("Connected to Robot");
+			System.out.println("Connected to Robot");
 			connected = true;
 		} catch(Exception e) {
 			System.out.println("Could not connect. Trying again in 500ms");
 			Thread.sleep(500);
+			connectToRobot();
 		}
 	}
 	

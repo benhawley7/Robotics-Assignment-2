@@ -16,11 +16,25 @@ public class Server {
 	public static final int port = 1234;
 	
 	// Server and client
-	private ServerSocket ss;
-	private Socket client;
+	private static ServerSocket ss;
+	private static Socket client;
 	
-	boolean serverCreated = false;
-	boolean clientConnected = false;
+	public static boolean serverCreated = false;
+	public static boolean clientConnected = false;
+	
+	public static void main(String[] args) throws Exception {
+		new Server();
+		while (true) {
+			String data = awaitData();
+			System.out.println(data);
+			Thread.sleep(2000);
+			// Execute Action
+			sendData("Achieved");
+		}
+
+		
+		
+	}
 	/**
 	 * Server Constructor
 	 * Attempt to create a server
@@ -42,13 +56,13 @@ public class Server {
 		} while (serverCreated == false);
 		
 		do {
+			System.out.println("Try connecting to client");
 			connectToClient();
 		} while (clientConnected == false);
 		
-		
 	}
 	
-	public void connectToClient() {
+	public static void connectToClient() {
 		try {
 			// Create a Server Socket and Await for the client to connect
 			client = ss.accept();
@@ -59,7 +73,7 @@ public class Server {
 		}
 	}
 	
-	public void sendData(String data) throws IOException {
+	public static void sendData(String data) throws IOException {
 		if (client.isClosed() == true) {
 			clientConnected = false;
 			do {
@@ -74,7 +88,7 @@ public class Server {
 		dOut.flush();
 	}
 	
-	public String awaitData() throws Exception {
+	public static String awaitData() throws Exception {
 		if (client.isClosed() == true) {
 			clientConnected = false;
 			do {

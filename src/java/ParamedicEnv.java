@@ -3,10 +3,6 @@
 import jason.asSyntax.*;
 import jason.environment.*;
 import jason.environment.grid.GridWorldModel;
-import jason.environment.grid.GridWorldView;
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.Graphics;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.logging.*;
@@ -25,7 +21,7 @@ public class ParamedicEnv extends Environment {
     private MapGUI mapView;
     private Client client;
     
-    private boolean isSimulatorMode = true;
+    private boolean isSimulatorMode = false;
 
     /** Called before the MAS execution with the args informed in .mas2j */
     @Override
@@ -48,15 +44,15 @@ public class ParamedicEnv extends Environment {
     @Override
     public boolean executeAction(String agName, Structure action) {
     	// Before we do anything, lets make sure we are connected to the robot
-    	if (isSimulatorMode == false && client.isConnected() == false) {
-    		do {
-        		try {
-    				client.connectToRobot();
-    			} catch (InterruptedException e) {
-
-    			}
-    		} while (client.isConnected() == false);
-    	}
+//    	if (isSimulatorMode == false && client.isConnected() == false) {
+//    		do {
+//        		try {
+//    				client.connectToRobot();
+//    			} catch (InterruptedException e) {
+//
+//    			}
+//    		} while (client.isConnected() == false);
+//    	}
     	
         try {
         	if (action.getFunctor().equals("addVictim")) {
@@ -118,16 +114,15 @@ public class ParamedicEnv extends Environment {
             	Pathfinder.Node[] path = p.getPath(agentPos[0], agentPos[1], x, y);
             
             	// Go through the path, starts at 1 because index 0 is null for some reason
-                for (int i = 1; i < path.length - 1; i++) {
+                for (int i = 1; i < path.length; i++) {
 
                 	if (isSimulatorMode == false) {
                     	/**
-                    	 * 
-                    	 * 
                     	 * Here is where we will send the move command to the EV3
-                    	 * 
-                    	 * 
                     	 */
+                		client.sendData("MOVE:" + path[i].x + "," + path[i].y);
+                		String data = client.awaitData();
+                		logger.info(data);
                 	}
 	
                 	// Update the agents position to the next move
@@ -141,8 +136,6 @@ public class ParamedicEnv extends Environment {
                 }
 	
                 model.setAgPos(0, x, y);
-                int[] pos = {x, y};
-                logger.info("New Agent Pos: " + x + ", " + y);
                 mapView.updateMap(model);
             	
             } else if (action.getFunctor().equals("nextTarget")) {
@@ -174,6 +167,25 @@ public class ParamedicEnv extends Environment {
             	Literal nearest = Literal.parseLiteral("nearest("+ currentNearestPos[0] + "," + currentNearestPos[1] + ")");
             	addPercept("paramedic", nearest);
             	
+            	
+            } else if (action.getFunctor().equals("inspectVictim")) {   	
+            	if (isSimulatorMode == false) {
+                	/**
+                	 * Here is where we will send the Colour Scan Command to the EV3
+                	 */
+            		client.sendData("SCAN:COLOUR");
+            		String colour = client.awaitData();
+            		
+            		if (colour == "White") {
+            			// No Victim
+            		} else if (colour == "Red") {
+            			// Critical Victim
+            		} else if (colour == "Cyan") {
+            			// Non Critical Victim
+            		} else {
+            			// We don't care if its any other colour
+            		}
+            	}
             	
             } else if (action.getFunctor().equals("removeVictim")) {
                 int x = (int)((NumberTerm)action.getTerm(0)).solve();
