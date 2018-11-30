@@ -162,13 +162,16 @@ public class MapGUI {
 	 * @param ro array of x y position of the robot
 	 * @param p  2d array of x y positions for the path
 	 */
-	public void updateMap(ArrayList<int[]> oL, int[] aL, ArrayList<int[]> vL, int[] hL ) {
+	public void updateMap(ArrayList<int[]> oL, int[] aL, ArrayList<int[]> vL, int[] hL, ArrayList<int[]> cL, ArrayList<int[]> nL) {
 		
 		
 		ArrayList<int[]> obstacleLocations = oL;
 		int [] agentLocation = aL;
 		ArrayList<int[]> victimLocations = vL;
 		int [] hospitalLocation = hL;
+		
+		ArrayList<int[]> criticalLocations = cL;
+		ArrayList<int[]> nonCriticalLocations = nL;
 		
 		// Remove Cell Formatting  - can cause interface flashing but fixing this isn't a priority.
 		for (int x = 0; x < MAP_ROWS; x++) {
@@ -190,6 +193,16 @@ public class MapGUI {
 			addVictim(victimLocations.get(i)[0], victimLocations.get(i)[1]);
 		}
 		
+		// Set the potential victim locations
+		for (int i = 0; i < criticalLocations.size(); i++) {
+			addCriticalVictim(criticalLocations.get(i)[0], criticalLocations.get(i)[1]);
+		}
+		
+		// Set the potential victim locations
+		for (int i = 0; i < nonCriticalLocations.size(); i++) {
+			addNonCriticalVictim(nonCriticalLocations.get(i)[0], nonCriticalLocations.get(i)[1]);
+		}
+		
 		// Set the current agent location
 		setAgentLocation(agentLocation[0], agentLocation[1]);
 	}
@@ -200,7 +213,11 @@ public class MapGUI {
 		int [] agentLocation = model.getAgentPosition();
 		ArrayList<int[]> victimLocations = model.getPotentialVictimLocations();
 		int [] hospitalLocation = model.getHospitalLocation();
-		updateMap(obstacleLocations, agentLocation, victimLocations, hospitalLocation);
+		
+		ArrayList<int[]> criticalLocations = model.getLocations(ParamedicEnv.CRITICAL);
+		ArrayList<int[]> nonCriticalLocations = model.getLocations(ParamedicEnv.NONCRITICAL);
+		
+		updateMap(obstacleLocations, agentLocation, victimLocations, hospitalLocation, criticalLocations, nonCriticalLocations);
 	}
 
 	public class MapPane extends JPanel {

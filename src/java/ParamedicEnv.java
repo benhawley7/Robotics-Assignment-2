@@ -15,13 +15,17 @@ public class ParamedicEnv extends Environment {
     public static final int GSize = 6; // The bay is a 6x6 grid
     public static final int HOSPITAL  = 8; // hospital code in grid model
     public static final int VICTIM  = 16; // victim code in grid model
+    // Obstacle is 32
+    public static final int CRITICAL = 64;
+    public static final int NONCRITICAL = 128;
+    
 
     private Logger logger = Logger.getLogger("doctor2018."+ParamedicEnv.class.getName());
     private RobotBayModel model;
     private MapGUI mapView;
     private Client client;
     
-    private boolean isSimulatorMode = true;
+    private boolean isSimulatorMode = false;
 
     /** Called before the MAS execution with the args informed in .mas2j */
     @Override
@@ -168,35 +172,75 @@ public class ParamedicEnv extends Environment {
             	addPercept("paramedic", nearest);
             	
             	
-            } else if (action.getFunctor().equals("inspectVictim")) {   	
-            	if (isSimulatorMode == false) {
-                	/**
-                	 * Here is where we will send the Colour Scan Command to the EV3
-                	 */
-            		client.sendData("SCAN:COLOUR");
-            		String colour = client.awaitData();
-            		
-            		if (colour == "White") {
-            			// No Victim
-            		} else if (colour == "Red") {
-            			// Critical Victim
-            		} else if (colour == "Cyan") {
-            			// Non Critical Victim
-            		} else {
-            			// We don't care if its any other colour
-            		}
-            	}
+            } else if (action.getFunctor().equals("inspectVictim")) {
+                int x = (int)((NumberTerm)action.getTerm(0)).solve();
+                int y = (int)((NumberTerm)action.getTerm(1)).solve();
+            	/**
+            	 * START TEMP TEST CODE
+            	 */
+            	
+//                critical(2,3).
+//                ~critical(4,5).
+//                ~critical(5,1).
+                
+                if (x == 2 && y == 3) {
+                	// Critical
+                	model.addCritical(x, y);
+                	
+                    Literal location = Literal.parseLiteral("colour(" + x + "," + y + ", burgandy)");
+                    addPercept("paramedic", location);
+	
+                } else if (x == 4 && y == 5) {
+                	// Not Critical
+                	model.addNonCritical(x, y);
+                    Literal location = Literal.parseLiteral("colour(" + x + "," + y + ", cyan)");
+                    addPercept("paramedic", location);
+                } else if (x == 5 && y == 1) {
+                	// Not Critical
+                	model.addNonCritical(x, y);
+                    Literal location = Literal.parseLiteral("colour(" + x + "," + y + ", cyan)");
+                    addPercept("paramedic", location);
+                } else {
+                	Literal location = Literal.parseLiteral("colour(" + x + "," + y + ", white)");
+                    addPercept("paramedic", location);
+                }
+        	
+            	mapView.updateMap(model);
+            	/**
+            	 * END TEMP TEST CODE
+            	 */
+            	
+            	
+            	
+//            	if (isSimulatorMode == false) {
+//                	/**
+//                	 * Here is where we will send the Colour Scan Command to the EV3
+//                	 */
+//            		client.sendData("SCAN:COLOUR");
+//            		String colour = client.awaitData();
+//            		
+//            		if (colour == "White") {
+//            			// No Victim
+//            		} else if (colour == "Red") {
+//            			// Critical Victim
+//            		} else if (colour == "Cyan") {
+//            			// Non Critical Victim
+//            		} else {
+//            			// We don't care if its any other colour
+//            		}
+//            	}
             	
             } else if (action.getFunctor().equals("removeVictim")) {
                 int x = (int)((NumberTerm)action.getTerm(0)).solve();
                 int y = (int)((NumberTerm)action.getTerm(1)).solve();
                 model.removeVictim(x, y);
-                mapView.updateMap(model.getObstacleLocations(), model.getAgentPosition(), model.getPotentialVictimLocations(), model.getHospitalLocation());
+                mapView.updateMap(model);
                 
             } else if (action.getFunctor().equals("pickUpVictim")) {
                 int x = (int)((NumberTerm)action.getTerm(0)).solve();
                 int y = (int)((NumberTerm)action.getTerm(1)).solve();
             	model.removeVictim(x, y);
+            	mapView.updateMap(model);
             	
             	// Update GUI to show that we are holding a victim
             	
@@ -284,6 +328,20 @@ public class ParamedicEnv extends Environment {
         	return victims;
         }
         
+        public ArrayList<int[]> getLocations(int type) {
+        	ArrayList<int[]> locations = new ArrayList<int[]>();
+        	for (int x = 0; x < GSize; x++) {
+        		for (int y = 0; y < GSize; y++) {
+        			if (model.hasObject(type, x, y) == true) {
+        				int[] victimPos = {x,y};
+        				locations.add(victimPos);
+        			}
+        		}
+        	}
+        	return locations;
+        }
+        
+        
         public int[] getHospitalLocation() {
         	int[] l = {0, 0};
         	return l;
@@ -305,6 +363,14 @@ public class ParamedicEnv extends Environment {
         
         void removeVictim(int x, int y) {
         	remove(VICTIM, x, y);
+        }
+        
+        void addCritical(int x, int y) {
+        	add(CRITICAL, x, y);
+        }
+        
+        void addNonCritical(int x, int y) {
+        	add(NONCRITICAL, x, y);
         }
 
     }
