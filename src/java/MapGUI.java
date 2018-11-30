@@ -13,6 +13,7 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.border.LineBorder;
 
+
 /**
  * MapGUI Class Class to create GUI to display probability values on client
  *
@@ -95,6 +96,9 @@ public class MapGUI {
 		label.setText("R");
 		JPanel cell = cells[x][y];
 		cell.setBorder(new LineBorder(cyan, 4));
+		if (cell.getBackground() == Color.WHITE) {
+			label.setForeground(Color.DARK_GRAY);
+		}
 	}
 
 	public void addObstacle(int x, int y) {
@@ -109,7 +113,7 @@ public class MapGUI {
 	public void addHospital(int x, int y) {
 		JPanel cell = cells[x][y];
 		JLabel label = labels[x][y];
-		cell.setBackground(blue);
+		cell.setBackground(yellow);
 		label.setText("H");
 		label.setFont(new Font("Arial", 1, 45));
 		label.setForeground(Color.WHITE);
@@ -166,23 +170,37 @@ public class MapGUI {
 		ArrayList<int[]> victimLocations = vL;
 		int [] hospitalLocation = hL;
 		
-		
-		for (int i = 0; i < MAP_ROWS; i++) {
-			for (int j = 0; j < MAP_COLS; j++) {
-				removeCellFormatting(i, j);
+		// Remove Cell Formatting  - can cause interface flashing but fixing this isn't a priority.
+		for (int x = 0; x < MAP_ROWS; x++) {
+			for (int y = 0; y < MAP_COLS; y++) {
+				removeCellFormatting(x, y);
 			}
 		}
 		
+		// Set the hospital
 		addHospital(hospitalLocation[0], hospitalLocation[1]);
+		
+		// Set the obstacles
 		for (int i = 0; i < obstacleLocations.size(); i++) {
 			addObstacle(obstacleLocations.get(i)[0], obstacleLocations.get(i)[1]);
 		}
+		
+		// Set the potential victim locations
 		for (int i = 0; i < victimLocations.size(); i++) {
 			addVictim(victimLocations.get(i)[0], victimLocations.get(i)[1]);
 		}
 		
-
+		// Set the current agent location
 		setAgentLocation(agentLocation[0], agentLocation[1]);
+	}
+	
+	public void updateMap(ParamedicEnv.RobotBayModel model) {
+		
+		ArrayList<int[]> obstacleLocations = model.getObstacleLocations();
+		int [] agentLocation = model.getAgentPosition();
+		ArrayList<int[]> victimLocations = model.getPotentialVictimLocations();
+		int [] hospitalLocation = model.getHospitalLocation();
+		updateMap(obstacleLocations, agentLocation, victimLocations, hospitalLocation);
 	}
 
 	public class MapPane extends JPanel {
@@ -225,6 +243,7 @@ public class MapGUI {
 					add(cell);
 				}
 			}
+			
 		}
 
 	}
