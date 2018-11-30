@@ -144,7 +144,20 @@ public class ParamedicEnv extends Environment {
             	
             } else if (action.getFunctor().equals("nextTarget")) {
             	int [] agentPos = model.getAgentPosition();
+            	
+            	ArrayList<int[]> victims = new ArrayList<int[]>(0);
             	ArrayList<int[]> potentialVictims = model.getPotentialVictimLocations();
+            	ArrayList<int[]> nonCriticalVictims = model.getLocations(NONCRITICAL);
+            	
+            	Literal hasCritical = Literal.parseLiteral("criticalRemaining");
+            	
+          
+            	logger.info("Has Critical" + containsPercept("paramedic", hasCritical));
+            	if (containsPercept("paramedic", hasCritical)) {
+            		victims.addAll(nonCriticalVictims);
+            	}
+             
+            	victims.addAll(potentialVictims);
               	
               	// Create a pathfinder
             	Pathfinder p = new Pathfinder(GSize, GSize);
@@ -157,8 +170,8 @@ public class ParamedicEnv extends Environment {
             	int currentShortestPath = Integer.MAX_VALUE; 
             	
             	// Find the nearest neighbour victim
-            	for (int j = 0; j < potentialVictims.size(); j++) {
-            		int[] victimLocation = potentialVictims.get(j);
+            	for (int j = 0; j < victims.size(); j++) {
+            		int[] victimLocation = victims.get(j);
             		Pathfinder.Node[] path = p.getPath(agentPos[0], agentPos[1], victimLocation[0], victimLocation[1]);
             		if (path.length < currentShortestPath) {
             			logger.info(victimLocation[0] + ", " + victimLocation[1] + " is closer than " + currentNearestPos[0] + ", " + currentNearestPos[1]);

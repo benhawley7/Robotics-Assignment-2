@@ -70,6 +70,7 @@
 			location(victim,_,_) &
 			location(obstacle,_,_)
 			<- 
+			if(Critical > 0){+criticalRemaining;.print("Still critical")};
 			nextTarget;
 			.print("next target found")
 			?nearest(X,Y);
@@ -80,6 +81,10 @@
 		+rescueMission(C,NC)
 			<- .wait(2000);
 			   -+rescueMission(C,NC).
+		
+		-rescueMission(_,_)<-
+			-criticalRemaining;
+			.print("No critical").
 			   
 		+location(hospital,X,Y) <- 
 			addHospital(X,Y);
@@ -151,7 +156,7 @@
 			?nearest(A,B);
 			!rescue(A,B).
 
-			
+		
 			   
 	/*Plan Library for Goals */
 		
