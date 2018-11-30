@@ -134,8 +134,8 @@ public class ParamedicEnv extends Environment {
                 	model.setAgPos(0, path[i].x, path[i].y);
                 	
                 	// Update the map with the new location
-//                	mapView.updateMap(model.getObstacleLocations(), model.getAgentPosition(), model.getPotentialVictimLocations(), model.getHospitalLocation());
                 	mapView.updateMap(model);
+                	
                 	// Sleep for testing purposes
                 	Thread.sleep(1000);
                 }
@@ -147,20 +147,19 @@ public class ParamedicEnv extends Environment {
             	
             } else if (action.getFunctor().equals("nextTarget")) {
             	int [] agentPos = model.getAgentPosition();
-            	logger.info("Agent Position: " + agentPos[0] + " " + agentPos[1]);
             	ArrayList<int[]> potentialVictims = model.getPotentialVictimLocations();
-            	ArrayList<int[]> obstaclesPos = model.getObstacleLocations();
-              	logger.info("Potential Victims" + potentialVictims.get(0)[0] + ", " + potentialVictims.get(0)[1]);
+              	
+              	// Create a pathfinder
             	Pathfinder p = new Pathfinder(GSize, GSize);
             	
-            	// Josh Loves i lol
-            	for (int i = 0; i < obstaclesPos.size(); i++) {
-            		int[] obstaclePos = obstaclesPos.get(i);
-            		p.updateCell(obstaclePos[0], obstaclePos[1], true);
-            	}
-            	    
+            	// Update the obstacles using the model
+            	p.updateCells(model);
+            	
+            	// Default, we say the nearest neighbour is the agents current position
             	int[] currentNearestPos = agentPos;
             	int currentShortestPath = Integer.MAX_VALUE; 
+            	
+            	// Find the nearest neighbour victim
             	for (int j = 0; j < potentialVictims.size(); j++) {
             		int[] victimLocation = potentialVictims.get(j);
             		Pathfinder.Node[] path = p.getPath(agentPos[0], agentPos[1], victimLocation[0], victimLocation[1]);
@@ -171,9 +170,9 @@ public class ParamedicEnv extends Environment {
             		}
             	}
             	
+            	// Update the agents percept of nearest neighbour
             	Literal nearest = Literal.parseLiteral("nearest("+ currentNearestPos[0] + "," + currentNearestPos[1] + ")");
             	addPercept("paramedic", nearest);
-            	logger.info("Nearest Neighbour is" + currentNearestPos[0] + "," + currentNearestPos[1]);
             	
             	
             } else if (action.getFunctor().equals("removeVictim")) {

@@ -2,6 +2,7 @@ import java.util.PriorityQueue;
 import java.util.Stack;
 import java.util.HashSet;
 import java.util.Comparator;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 public class Pathfinder{
@@ -43,6 +44,15 @@ public class Pathfinder{
 			for(int j=0;j<y;j++)
 				map[i][j] = new Node(i,j,false);
 		
+	}
+	
+	
+	public void updateCells(ParamedicEnv.RobotBayModel model) {
+		ArrayList<int[]> obstaclesPos = model.getObstacleLocations();
+    	for (int i = 0; i < obstaclesPos.size(); i++) {
+    		int[] obstaclePos = obstaclesPos.get(i);
+    		updateCell(obstaclePos[0], obstaclePos[1], true);
+    	}
 	}
 	
 
