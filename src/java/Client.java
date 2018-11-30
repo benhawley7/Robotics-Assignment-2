@@ -12,13 +12,13 @@ public class Client {
 	
 	private String ip = "192.168.70.187"; 
 	private int port = 1234;
-	public boolean isConnected = false;
+	public boolean connected = false;
 	private Socket sock = null;
 	
 	public Client() throws IOException, InterruptedException {
 		do {
 			connectToRobot();
-		} while (isConnected == false);
+		} while (connected == false);
 		
 	}
 	
@@ -26,7 +26,7 @@ public class Client {
 		try {
 			sock = new Socket(ip, port);
 			System.out.print("Connected to Robot");
-			isConnected = true;
+			connected = true;
 		} catch(Exception e) {
 			System.out.println("Could not connect. Trying again in 500ms");
 			Thread.sleep(500);
@@ -37,7 +37,12 @@ public class Client {
 		if (sock == null) {
 			return false;
 		}
-		return !sock.isClosed();
+		 if (sock.isClosed() == true) {
+			 connected = true;
+		 } else {
+			 connected = false;
+		 }
+		 return connected;
 	}
 	
 	public void sendData(String dataString) throws IOException {

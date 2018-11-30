@@ -195,7 +195,6 @@ public class ParamedicEnv extends Environment {
             } else if (action.getFunctor().equals("finishRescueMission")) {
             	// Finish the mission
             	
-            	
             } else {
                 logger.info("executing: "+action+", but not implemented! Lel");
                 return true;
