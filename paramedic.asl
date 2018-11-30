@@ -67,13 +67,13 @@
 		//a victim and an obstacle:
 		+rescueMission(Critical,NonCritical): 
 			location(hospital,_,_) & 
-			location(victim,_,_) &
+			(location(victim,_,_)| ~critical(_,_) | critical(_,_))&
 			location(obstacle,_,_)
 			<- 
-			if(Critical > 0){+criticalRemaining;.print("Still critical")};
+			criticals(Critical);
 			nextTarget;
-			.print("next target found")
 			?nearest(X,Y);
+			.print("next target found ",X,Y);
 			!rescue(X,Y).
 		
 		//If we have tried to start a rescue mission without knowing
@@ -82,9 +82,7 @@
 			<- .wait(2000);
 			   -+rescueMission(C,NC).
 		
-		-rescueMission(_,_)<-
-			-criticalRemaining;
-			.print("No critical").
+
 			   
 		+location(hospital,X,Y) <- 
 			addHospital(X,Y);
@@ -98,8 +96,9 @@
 			addObstacle(X,Y);
 			.print(obstacle,X,Y).
 		
-		+nearest(X,Y): nearest(I,J) & not X=I & not Y = J<-
-			-nearest(I,J);
+		+nearest(X,Y): nearest(I,J) & not (X=I & Y = J)<-
+			-nearest(I,J)[source(percept)];
+			.print("removing",I,J);
 			?nearest(A,B);
 			.print("Nearest: ",A,B).
 			
@@ -108,7 +107,8 @@
 			pickUpVictim(X,Y);
 			+carryingVictim(critical);
 			-location(victim,X,Y);
-			removeVictim(X,Y);
+			-critical(X,Y);
+			noVictimAt(X,Y);
 			-critical(X,Y);
 			!moveTo(0,0).
 		
@@ -134,7 +134,7 @@
 			.print("Non critical found");
 			nonCriticalVictimAt(X,Y);
 			pickUpVictim(X,Y);
-			
+			-critical(X,Y);
 			+carryingVictim(~critical);
 			-location(victim,X,Y);
 			-~critical(X,Y);

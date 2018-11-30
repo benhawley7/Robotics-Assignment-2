@@ -142,23 +142,35 @@ public class ParamedicEnv extends Environment {
                 model.setAgPos(0, x, y);
                 mapView.updateMap(model);
             	
-            } else if (action.getFunctor().equals("nextTarget")) {
+            } else if(action.getFunctor().equals("criticals")) {
+            	
+            	int criticals = (int)((NumberTerm)action.getTerm(0)).solve();
+            	model.numberOfCriticals = criticals;
+            
+        	} else if (action.getFunctor().equals("nextTarget")) {
             	int [] agentPos = model.getAgentPosition();
             	
             	ArrayList<int[]> victims = new ArrayList<int[]>(0);
             	ArrayList<int[]> potentialVictims = model.getPotentialVictimLocations();
             	ArrayList<int[]> nonCriticalVictims = model.getLocations(NONCRITICAL);
             	
-            	Literal hasCritical = Literal.parseLiteral("criticalRemaining");
             	
-          
-            	logger.info("Has Critical" + containsPercept("paramedic", hasCritical));
-            	if (containsPercept("paramedic", hasCritical)) {
+            	
+
+            	if (model.numberOfCriticals == 0) {
+            		logger.info("No more criticals, can save our non criticals");
             		victims.addAll(nonCriticalVictims);
             	}
              
             	victims.addAll(potentialVictims);
-              	
+            	
+            	String output = "";
+            	for (int i = 0; i < victims.size(); i++) {
+            		output += "["+ victims.get(i)[0] + ", " + victims.get(i)[1]  + "] ";
+            	}
+            	
+            	logger.info("All Victims to select for nearest");
+            	logger.info(output);
               	// Create a pathfinder
             	Pathfinder p = new Pathfinder(GSize, GSize);
             	
@@ -179,9 +191,12 @@ public class ParamedicEnv extends Environment {
             			currentShortestPath = path.length;
             		}
             	}
-            	
+            	logger.info("Location chosen by nearest neighbour is: " + currentNearestPos[0] + ", " + currentNearestPos[1]);
             	// Update the agents percept of nearest neighbour
+            	Literal removal = Literal.parseLiteral("nearest(X,Y)");
             	Literal nearest = Literal.parseLiteral("nearest("+ currentNearestPos[0] + "," + currentNearestPos[1] + ")");
+            	
+            	//removePercept("paramedic",removal);
             	addPercept("paramedic", nearest);
             	
             	
@@ -265,6 +280,7 @@ public class ParamedicEnv extends Environment {
                 int y = (int)((NumberTerm)action.getTerm(1)).solve();
                 
                 int victimType = model.getVictimType(x, y);
+                logger.info("Victim Type: " + victimType);
             	model.remove(victimType, x, y);
             	
             	if (victimType == CRITICAL) {
@@ -323,6 +339,8 @@ public class ParamedicEnv extends Environment {
         
         public boolean carryingCritical = false;
         public boolean carryingNonCritical = false;
+        
+        public int numberOfCriticals = 0;
         
         public int[] getAgentPosition() {
         	int[] agentPos = {-1, -1};
