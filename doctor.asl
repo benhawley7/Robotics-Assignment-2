@@ -31,6 +31,7 @@ location(victim,1,5).
 location(victim,2,3).
 location(victim,4,5).
 location(victim,5,1).
+location(victim,5,5).
 
 // ========================================================================
 // The following beliefs MUST NOT be shared, but represent the location of
@@ -38,6 +39,7 @@ location(victim,5,1).
 critical(2,3).
 ~critical(4,5).
 ~critical(5,1).
+critical(5,5).
 
 // ========================================================================
 // Initial goals

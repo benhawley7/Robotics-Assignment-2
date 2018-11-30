@@ -107,6 +107,20 @@
 			-critical(X,Y);
 			!moveTo(0,0).
 		
+		+~critical(X,Y):
+			location(self,X,Y)&
+			rescueMission(C,NC)&
+			C>0
+			<-
+			.print("Non critical found");
+			nonCriticalVictimAt(X,Y);
+			-location(victim,X,Y);
+			nextTarget;
+			?nearest(A,B);
+			!rescue(A,B).
+			
+			
+			
 		+~critical(X,Y): 
 			location(self,X,Y)&
 			rescueMission(C,NC)&
@@ -136,8 +150,8 @@
 			nextTarget;
 			?nearest(A,B);
 			!rescue(A,B).
+
 			
-		
 			   
 	/*Plan Library for Goals */
 		

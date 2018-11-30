@@ -192,6 +192,9 @@ public class ParamedicEnv extends Environment {
                 } else if (x == 5 && y == 1) {
                     Literal location = Literal.parseLiteral("colour(" + x + "," + y + ", cyan)");
                     addPercept("paramedic", location);
+                } else if (x == 5 && y == 5) {
+                    Literal location = Literal.parseLiteral("colour(" + x + "," + y + ", burgandy)");
+                    addPercept("paramedic", location);
                 } else {
                 	Literal location = Literal.parseLiteral("colour(" + x + "," + y + ", white)");
                     addPercept("paramedic", location);
