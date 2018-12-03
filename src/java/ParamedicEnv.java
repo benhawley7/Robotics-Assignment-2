@@ -25,7 +25,7 @@ public class ParamedicEnv extends Environment {
     private MapGUI mapView;
     private Client client;
     
-    private boolean isSimulatorMode = true;
+    private boolean isSimulatorMode = false;
 
     /** Called before the MAS execution with the args informed in .mas2j */
     @Override

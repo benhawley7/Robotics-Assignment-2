@@ -16,23 +16,24 @@ public class Server {
 	public static final int port = 1234;
 	
 	// Server and client
-	private static ServerSocket ss;
-	private static Socket client;
+	private ServerSocket ss;
+	private Socket client;
+	private RobotInterface robotInterface;
 	
-	public static boolean serverCreated = false;
-	public static boolean clientConnected = false;
+	public boolean serverCreated = false;
+	public boolean clientConnected = false;
+	
 	
 	public static void main(String[] args) throws Exception {
-		new Server();
-		while (true) {
-			String data = awaitData();
-			System.out.println(data);
-			Thread.sleep(2000);
-			// Execute Action
-			sendData("Achieved");
-		}
-
 		
+		Server s = new Server();
+		RobotInterface rI = new RobotInterface(s);
+		s.setInterface(rI);
+		
+		while (true) {
+			s.awaitData();
+			Thread.sleep(2000);
+		}
 		
 	}
 	/**
@@ -62,7 +63,11 @@ public class Server {
 		
 	}
 	
-	public static void connectToClient() {
+	public void setInterface(RobotInterface rI) {
+		robotInterface = rI;
+	}
+	
+	public void connectToClient() {
 		try {
 			// Create a Server Socket and Await for the client to connect
 			client = ss.accept();
@@ -73,14 +78,14 @@ public class Server {
 		}
 	}
 	
-	public static void sendData(String data) throws IOException {
+	public void sendData(String data) throws IOException {
 		if (client.isClosed() == true) {
 			clientConnected = false;
 			do {
 				connectToClient();
 			} while (clientConnected == false);
 		}
-		
+		System.out.println("Sending Data: " + data);
 		// Create a data output stream to write strings to the client
 		OutputStream out = client.getOutputStream();
 		DataOutputStream dOut = new DataOutputStream(out);
@@ -88,11 +93,11 @@ public class Server {
 		dOut.flush();
 	}
 	
-	public static String awaitData() throws Exception {
+	public void awaitData() throws Exception {
 		if (client.isClosed() == true) {
 			clientConnected = false;
 			do {
-				connectToClient();
+				this.connectToClient();
 			} while (clientConnected == false);
 		}
 		
@@ -108,7 +113,7 @@ public class Server {
 			}
 		} while(data == null);
 		
-		return data;
+		robotInterface.parseCommand(data);
 	}
 
 	
