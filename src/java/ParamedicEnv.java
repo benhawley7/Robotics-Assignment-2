@@ -25,7 +25,7 @@ public class ParamedicEnv extends Environment {
     private MapGUI mapView;
     private Client client;
     
-    private boolean isSimulatorMode = false;
+    private boolean isSimulatorMode = true;
 
     /** Called before the MAS execution with the args informed in .mas2j */
     @Override
@@ -151,8 +151,19 @@ public class ParamedicEnv extends Environment {
             	ArrayList<int[]> potentialVictims = model.getPotentialVictimLocations();
             	ArrayList<int[]> nonCriticalVictims = model.getLocations(NONCRITICAL);
             	
+            	logger.info("NUMBER OF CRITICALS: " + model.numberOfCriticals);
             	
+             	String output = "POTENTIAL VICTIMS:";
+            	for (int i = 0; i < potentialVictims.size(); i++) {
+            		output += "["+ potentialVictims.get(i)[0] + ", " + potentialVictims.get(i)[1]  + "] ";
+            	}
+            	logger.info(output);
             	
+             	String output2 = "NON CRITICALS: ";
+            	for (int i = 0; i < nonCriticalVictims.size(); i++) {
+            		output2 += "["+ nonCriticalVictims.get(i)[0] + ", " + nonCriticalVictims.get(i)[1]  + "] ";
+            	}
+            	logger.info(output2);
 
             	if (model.numberOfCriticals == 0) {
             		logger.info("No more criticals, can save our non criticals");
@@ -161,13 +172,12 @@ public class ParamedicEnv extends Environment {
              
             	victims.addAll(potentialVictims);
             	
-            	String output = "";
+            	String output3 = "ALL SELECTED: ";
             	for (int i = 0; i < victims.size(); i++) {
-            		output += "["+ victims.get(i)[0] + ", " + victims.get(i)[1]  + "] ";
+            		output3 += "["+ victims.get(i)[0] + ", " + victims.get(i)[1]  + "] ";
             	}
+            	logger.info(output3);
             	
-            	logger.info("All Victims to select for nearest");
-            	logger.info(output);
               	// Create a pathfinder
             	Pathfinder p = new Pathfinder(GSize, GSize);
             	
@@ -183,12 +193,13 @@ public class ParamedicEnv extends Environment {
             		int[] victimLocation = victims.get(j);
             		Pathfinder.Node[] path = p.getPath(agentPos[0], agentPos[1], victimLocation[0], victimLocation[1]);
             		if (path.length < currentShortestPath) {
-            			logger.info(victimLocation[0] + ", " + victimLocation[1] + " is closer than " + currentNearestPos[0] + ", " + currentNearestPos[1]);
+//            			logger.info(victimLocation[0] + ", " + victimLocation[1] + " is closer than " + currentNearestPos[0] + ", " + currentNearestPos[1]);
             			currentNearestPos = victimLocation;
             			currentShortestPath = path.length;
             		}
             	}
-            	logger.info("Location chosen by nearest neighbour is: " + currentNearestPos[0] + ", " + currentNearestPos[1]);
+            	
+            	logger.info("NEAREST NEIGHBOUR: " + currentNearestPos[0] + ", " + currentNearestPos[1]);
             	// Update the agents percept of nearest neighbour
             	Literal removal = Literal.parseLiteral("nearest(X,Y)");
             	Literal nearest = Literal.parseLiteral("nearest("+ currentNearestPos[0] + "," + currentNearestPos[1] + ")");

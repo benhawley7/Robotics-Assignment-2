@@ -67,13 +67,15 @@
 		//a victim and an obstacle:
 		+rescueMission(Critical,NonCritical): 
 			location(hospital,_,_) & 
-			(location(victim,_,_)| ~critical(_,_) | critical(_,_))&
-			location(obstacle,_,_)
+			(location(victim,_,_) | ~critical(_,_) | critical(_,_)) &
+			location(obstacle,_,_)&
+			not carringVictim(_)
 			<- 
+
 			criticals(Critical);
 			nextTarget;
+			.print("Rescue mission target found")
 			?nearest(X,Y);
-			.print("next target found ",X,Y);
 			!rescue(X,Y).
 		
 		//If we have tried to start a rescue mission without knowing
@@ -81,8 +83,6 @@
 		+rescueMission(C,NC)
 			<- .wait(2000);
 			   -+rescueMission(C,NC).
-		
-
 			   
 		+location(hospital,X,Y) <- 
 			addHospital(X,Y);
@@ -96,18 +96,17 @@
 			addObstacle(X,Y);
 			.print(obstacle,X,Y).
 		
-		+nearest(X,Y): nearest(I,J) & not (X=I & Y = J)<-
-			-nearest(I,J)[source(percept)];
-			.print("removing",I,J);
+		+nearest(X,Y): nearest(I,J) & not X=I & not Y = J<-
+			-nearest(I,J)[source(_)];
 			?nearest(A,B);
 			.print("Nearest: ",A,B).
-			
+		
 		+critical(X,Y): location(self,X,Y) <-
 			criticalVictimAt(X,Y);
 			pickUpVictim(X,Y);
 			+carryingVictim(critical);
-			-location(victim,X,Y);
-			-critical(X,Y);
+			-location(victim,X,Y)[source(_)];
+			-critical(X,Y)[source(_)];
 			noVictimAt(X,Y);
 			-critical(X,Y);
 			!moveTo(0,0).
@@ -119,12 +118,11 @@
 			<-
 			.print("Non critical found");
 			nonCriticalVictimAt(X,Y);
-			-location(victim,X,Y);
+			-location(victim,X,Y)[source(_)];
 			nextTarget;
+			.print("non Critical target found");
 			?nearest(A,B);
-			!rescue(A,B).
-			
-			
+			!rescue(A,B).	
 			
 		+~critical(X,Y): 
 			location(self,X,Y)&
@@ -134,10 +132,10 @@
 			.print("Non critical found");
 			nonCriticalVictimAt(X,Y);
 			pickUpVictim(X,Y);
-			-critical(X,Y);
+			
 			+carryingVictim(~critical);
-			-location(victim,X,Y);
-			-~critical(X,Y);
+			-location(victim,X,Y)[source(_)];
+			-~critical(X,Y)[source(_)];
 			!moveTo(0,0).
 			
 		+location(self,0,0): carryingVictim(S) <-
@@ -149,13 +147,15 @@
 			if(S=~critical){+rescueMission(C,NC-1)}.
 			
 		+colour(X,Y,white)<-
-			-location(victim,X,Y);
+			-location(victim,X,Y)[source(_)];
 			noVictimAt(X,Y);
 			.print("No victim at ",X,Y);
 			nextTarget;
+			.print("No victim target found");
+			.print
 			?nearest(A,B);
 			!rescue(A,B).
-
+			
 		
 			   
 	/*Plan Library for Goals */
@@ -172,5 +172,5 @@
 		+!moveTo(X,Y) <- 
 			moveTo(X,Y); 
 			.print(X," ",Y);
-			-location(self,_,_);
+			-location(self,_,_);    
 			+location(self,X,Y).
