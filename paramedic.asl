@@ -116,6 +116,8 @@
 			-critical(X,Y)[source(_)];
 			noVictimAt(X,Y);
 			-critical(X,Y);
+			?rescueMission(C,NC);
+			if(C=1 & NC = 0){allLocated};
 			!moveTo(0,0).
 		
 		+~critical(X,Y):
@@ -144,6 +146,8 @@
 			+carryingVictim(~critical);
 			-location(victim,X,Y)[source(_)];
 			-~critical(X,Y)[source(_)];
+			?rescueMission(C,NC);
+			if(C=0 & NC = 1){allLocated};
 			!moveTo(0,0).
 			
 		+location(self,0,0): carryingVictim(S) <-
@@ -159,6 +163,8 @@
 			+carryingVictim(~critical);
 			-location(victim,X,Y)[source(_)];
 			-~critical(X,Y)[source(_)];
+			?rescueMission(C,NC);
+			if(C=0 & NC = 1){allLocated};
 			!moveTo(0,0).
 			
 		+colour(X,Y,white)<-
