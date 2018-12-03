@@ -48,15 +48,11 @@ public class ParamedicEnv extends Environment {
     @Override
     public boolean executeAction(String agName, Structure action) {
     	// Before we do anything, lets make sure we are connected to the robot
-//    	if (isSimulatorMode == false && client.isConnected() == false) {
-//    		do {
-//        		try {
-//    				client.connectToRobot();
-//    			} catch (InterruptedException e) {
-//
-//    			}
-//    		} while (client.isConnected() == false);
-//    	}
+    	if (isSimulatorMode == false) {
+    		if (client.isConnected() == false) {
+        		client.connectToRobot();
+    		}
+    	}
     	
         try {
         	if (action.getFunctor().equals("addVictim")) {
@@ -124,9 +120,10 @@ public class ParamedicEnv extends Environment {
                     	/**
                     	 * Here is where we will send the move command to the EV3
                     	 */
-                		client.sendData("MOVE:" + path[i].x + "," + path[i].y);
+                  		client.sendData("MOVE:" + path[i].x + "," + path[i].y);
                 		String data = client.awaitData();
                 		logger.info(data);
+
                 	}
 	
                 	// Update the agents position to the next move

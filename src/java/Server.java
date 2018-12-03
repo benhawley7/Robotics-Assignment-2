@@ -31,8 +31,8 @@ public class Server {
 		s.setInterface(rI);
 		
 		while (true) {
-			s.awaitData();
 			Thread.sleep(2000);
+			s.awaitData();
 		}
 		
 	}
@@ -93,27 +93,29 @@ public class Server {
 		dOut.flush();
 	}
 	
-	public void awaitData() throws Exception {
-		if (client.isClosed() == true) {
-			clientConnected = false;
-			do {
-				this.connectToClient();
-			} while (clientConnected == false);
-		}
+	public void awaitData() {
 		
 		String data = null;
-		do {
+
+		try {
+			// Create an data input stream to receive the map probability strings
+			InputStream in = client.getInputStream();
+			DataInputStream dIn = new DataInputStream(in);
+			data = dIn.readUTF();
+
+		} catch(Exception e) {
 			try {
-				// Create an data input stream to receive the map probability strings
-				InputStream in = client.getInputStream();
-				DataInputStream dIn = new DataInputStream(in);
-				data = dIn.readUTF();
-			} catch(Exception e) {
-				
+				client = ss.accept();
+			} catch (IOException e1) {
+//				// TODO Auto-generated catch block
+//				e1.printStackTrace();
 			}
-		} while(data == null);
-		
-		robotInterface.parseCommand(data);
+		}
+		try {
+			robotInterface.parseCommand(data);
+		} catch(Exception e) {
+			
+		}
 	}
 
 	
