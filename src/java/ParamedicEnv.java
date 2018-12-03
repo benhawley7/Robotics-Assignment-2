@@ -24,7 +24,9 @@ public class ParamedicEnv extends Environment {
     private RobotBayModel model;
     private MapGUI mapView;
     private Client client;
-    
+    private int perceptIndex = 0;
+	
+	
     private boolean isSimulatorMode = true;
 
     /** Called before the MAS execution with the args informed in .mas2j */
@@ -202,8 +204,8 @@ public class ParamedicEnv extends Environment {
             	logger.info("NEAREST NEIGHBOUR: " + currentNearestPos[0] + ", " + currentNearestPos[1]);
             	// Update the agents percept of nearest neighbour
             	Literal removal = Literal.parseLiteral("nearest(X,Y)");
-            	Literal nearest = Literal.parseLiteral("nearest("+ currentNearestPos[0] + "," + currentNearestPos[1] + ")");
-            	
+            	Literal nearest = Literal.parseLiteral("newNearest("+ currentNearestPos[0] + "," + currentNearestPos[1] + "," + perceptIndex +")");
+				perceptIndex++;
             	//removePercept("paramedic",removal);
             	addPercept("paramedic", nearest);
             	

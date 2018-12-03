@@ -54,7 +54,7 @@
 			-proposal(CNPId,_,_).
 	
 	/*Plan Library for Beliefs */
-		
+	
 		-carrying(_):
 			rescueMission(Critical,NonCritical)&
 			Critical = 0 &
@@ -75,6 +75,7 @@
 			criticals(Critical);
 			nextTarget;
 			.print("Rescue mission target found")
+			.wait(1000);
 			?nearest(X,Y);
 			!rescue(X,Y).
 		
@@ -96,10 +97,13 @@
 			addObstacle(X,Y);
 			.print(obstacle,X,Y).
 		
-		+nearest(X,Y): nearest(I,J) & not X=I & not Y = J<-
-			-nearest(I,J)[source(_)];
-			?nearest(A,B);
-			.print("Nearest: ",A,B).
+		@addNear[atomic]+newNearest(X,Y,Index)<-
+			.print("Current nearest: ",X,Y);
+			-nearest(I,J);
+			+nearest(X,Y).
+			//-newNearest[source(percerpt)].
+			//?nearest(A,B);
+			//.print("New Nearest: ",A,B).
 		
 		+critical(X,Y): location(self,X,Y) <-
 			criticalVictimAt(X,Y);
@@ -121,6 +125,7 @@
 			-location(victim,X,Y)[source(_)];
 			nextTarget;
 			.print("non Critical target found");
+			.wait(1000);
 			?nearest(A,B);
 			!rescue(A,B).	
 			
@@ -146,13 +151,20 @@
 			if(S=critical){+rescueMission(C-1,NC)};
 			if(S=~critical){+rescueMission(C,NC-1)}.
 			
+		+location(self,X,Y): ~critical(X,Y) <-
+			pickUpVictim(X,Y);
+			+carryingVictim(~critical);
+			-location(victim,X,Y)[source(_)];
+			-~critical(X,Y)[source(_)];
+			!moveTo(0,0).
+			
 		+colour(X,Y,white)<-
 			-location(victim,X,Y)[source(_)];
 			noVictimAt(X,Y);
 			.print("No victim at ",X,Y);
 			nextTarget;
 			.print("No victim target found");
-			.print
+			.wait(1000);
 			?nearest(A,B);
 			!rescue(A,B).
 			
