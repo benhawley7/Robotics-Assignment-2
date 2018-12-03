@@ -22,22 +22,22 @@ all_proposals_received(CNPId)
 // ========================================================================
 // The following beliefs will be shared
 location(hospital,0,0).
-location(obstacle,1,2).
-location(obstacle,0,3).
-location(obstacle,1,4).
-location(obstacle,3,3).
-location(victim,1,3).
+location(obstacle,2,2).
+location(obstacle,3,2).
+location(obstacle,4,3).
+location(obstacle,5,0).
 location(victim,0,2).
-location(victim,0,4).
-location(victim,5,5).
-location(victim,4,3).
+location(victim,1,5).
+location(victim,2,3).
+location(victim,4,5).
+location(victim,5,1).
 
 // ========================================================================
 // The following beliefs MUST NOT be shared, but represent the location of
 // actual victims and their critical status
-critical(1,3).
-~critical(4,3).
-~critical(0,2).
+critical(2,3).
+~critical(4,5).
+~critical(5,1).
 
 // ========================================================================
 // Initial goals

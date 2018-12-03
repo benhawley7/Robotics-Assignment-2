@@ -9,8 +9,8 @@ import java.net.*;
  */
 public class Client {
 
-//	private String ip = "192.168.70.187"; 
-	private String ip = "127.0.0.1";
+	private String ip = "192.168.70.187"; 
+//	private String ip = "127.0.0.1";
 	private int port = 1234;
 	public boolean connected = false;
 	private Socket sock = null;
