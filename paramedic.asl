@@ -62,7 +62,10 @@
 			~carryingVictim(_)
 			<-
 			allRescued.
-	
+		
+		+rescueMission(0,0)<-
+			finish.
+			
 		//When a rescue mission has been started, and there is a hospital,
 		//a victim and an obstacle:
 		+rescueMission(Critical,NonCritical): 
