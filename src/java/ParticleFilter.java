@@ -1,4 +1,7 @@
 import java.util.HashSet;
+import javax.swing.*;
+import java.awt.*;
+import java.util.Scanner;
 
 public class ParticleFilter{
 	
@@ -45,7 +48,9 @@ public class ParticleFilter{
 		
 		particles = new HashSet<Particle>(dimX*dimY*4);
 		
-		for(int x = 0; x<dimX; x++){
+		particles.add(new Particle(3,3,Direction.XP));
+		
+		/*for(int x = 0; x<dimX; x++){
 			for(int y = 0; y<dimY; y++){
 				
 				particles.add(new Particle(x,y,Direction.XP));
@@ -54,7 +59,7 @@ public class ParticleFilter{
 				particles.add(new Particle(x,y,Direction.YN));
 				
 			}			
-		}		
+		}	*/	
 	}
 	
 	public boolean addObstacle(int x, int y){
@@ -186,19 +191,156 @@ public class ParticleFilter{
 		
 	}
 	
+	@Override
+	public String toString(){
+		
+		String printString = "";
+		
+		for(int y = dimY-1; y >= 0; y--){
+			for(int x = 0; x < dimX; x++){
+				
+				Particle XP = new Particle(x,y,Direction.XP);
+				Particle XN = new Particle(x,y,Direction.XN);
+				Particle YP = new Particle(x,y,Direction.YP);
+				Particle YN = new Particle(x,y,Direction.YN);
+				
+				boolean xp = particles.contains(XP);
+				boolean xn = particles.contains(XN);
+				boolean yp = particles.contains(YP);
+				boolean yn = particles.contains(YN);
+				
+				if(xp && xn && yp && yn){
+					
+					printString += '\u254B';
+					
+				}else if(xp && xn && yp){
+					
+					printString += '\u253B';
+					
+				}else if(xp && xn && yn){
+					
+					printString += '\u2533';
+					
+				}else if(xp && yp && yn){
+					
+					printString += '\u2523';
+					
+				}else if(xn && yp && yn){
+					
+					printString += '\u252B';
+					
+				}else if(xp && xn){
+					
+					printString += '\u2501';
+					
+				}else if(yp && yn){
+					
+					printString += '\u2503';
+					
+				}else if(xp && yp){
+					
+					printString += '\u2515';
+					
+				}else if(xp && yn){
+					
+					printString += '\u250F';
+					
+				}else if(xn && yp){
+					
+					printString += '\u251B';
+					
+				}else if(xn && yn){
+					
+					printString += '\u2513';
+					
+				}else if(xp){
+					
+					printString += '\u2579';
+					
+				}else if(xn){
+					
+					printString += '\u257B';
+					
+				}else if(yp){
+					
+					printString += '\u257A';
+					
+					
+				}else if(yn){
+					
+					printString += '\u2578';
+					
+				}else{
+					
+					printString += ' ';
+					
+				}
+				
+			}
+
+			printString += '\n';
+			
+		}
+		
+		return printString;
+		
+	}
+	
 	public static void main(String[] args){
 		ParticleFilter filter = new ParticleFilter(6,6);
 		System.out.println(filter.particles);
 		System.out.println(filter.particles.size());
-		filter.addObstacle(0,0);
+		//filter.addObstacle(0,0);
 		System.out.println(filter.particles.size());
-		filter.moveParticlesForward();
+		//filter.moveParticlesForward();
+		//filter.moveParticlesForward();
+		//filter.moveParticlesForward();
 		System.out.println(filter.particles.size());
 		Particle x = new Particle(1,2,Direction.XP);
 		Particle y = new Particle(1,2,Direction.XP);
 		filter.rotateParticles180();
 		System.out.println(x.hashCode() == y.hashCode());
 		System.out.println(filter.particles.contains(x));
+		System.out.println(filter.toString());
+		
+		JFrame frame = new JFrame();
+		frame.setPreferredSize(new Dimension(400, 400));
+		
+		JTextArea textArea = new JTextArea(400,400);
+		textArea.setFont(new Font("monospaced", Font.PLAIN, 35));
+		textArea.setText(filter.toString());
+		frame.add(textArea);
+		frame.pack();
+		frame.setVisible(true);
+		
+		Scanner input = new Scanner(System.in);
+		
+		while(true){
+			
+			String c = input.next();
+			switch(c){
+				
+				case "w":
+					filter.moveParticlesForward();
+					break;
+				case "s":
+					filter.rotateParticles180();
+					break;
+				case "a":
+					filter.rotateParticlesAntiClockwise();
+					break;
+				case "d":
+					filter.rotateParticlesClockwise();
+					break;
+				case "q":
+					System.exit(0);
+					break;
+			}
+			
+			textArea.setText(filter.toString());
+			
+		}
+		
 	}
 	
 }
