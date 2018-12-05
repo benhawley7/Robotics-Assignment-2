@@ -67,14 +67,20 @@ public class ParticleFilter{
 
 			grid[x][y] = true;
 			
-			particles.remove(new Particle(x,y,Direction.XP));
-			particles.remove(new Particle(x,y,Direction.XN));
-			particles.remove(new Particle(x,y,Direction.YP));
-			particles.remove(new Particle(x,y,Direction.YN));
+			removeParticlesAt(x,y);
 			
 			return true;
 			
 		}else return false;
+	}
+	
+	public void removeParticlesAt(int x, int y){
+		
+		particles.remove(new Particle(x,y,Direction.XP));
+		particles.remove(new Particle(x,y,Direction.XN));
+		particles.remove(new Particle(x,y,Direction.YP));
+		particles.remove(new Particle(x,y,Direction.YN));
+		
 	}
 	
 	public void rotateParticlesClockwise(){
@@ -290,6 +296,7 @@ public class ParticleFilter{
 		System.out.println(filter.particles);
 		System.out.println(filter.particles.size());
 		filter.addObstacle(0,0);
+		filter.addObstacle(3,4);
 		System.out.println(filter.particles.size());
 		System.out.println(filter.particles.size());
 		Particle x = new Particle(1,2,Direction.XP);
