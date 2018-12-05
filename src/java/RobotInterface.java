@@ -1,34 +1,36 @@
 import java.io.IOException;
 
 public class RobotInterface {
-	public Server server;
-//	public Robot robot;
+	
+	protected final Logger logger = new Logger(getClass());
 
-	public RobotInterface(Server s) {
+	public Server server;
+	public Robot robot;
+
+	public RobotInterface(Server s, Robot robot) {
 		server = s;
+		this.robot = robot;
 	}
 	
 	public void parseCommand(String command) throws IOException {
-		System.out.println(command);
+		logger.info(command);
 		String[] parts = command.split(":");
 		String part1 = parts[0];
 		String part2 = parts[1];
 		
 		if (part1.equals("MOVE")) {
-			System.out.println("It is a move command");
+			logger.debug("It is a move command");
 			String[] coordinatesStr = part2.split(",");
-			int x = Integer.parseInt(coordinatesStr[0]);
-			int y = Integer.parseInt(coordinatesStr[1]);
+			int y = Integer.parseInt(coordinatesStr[0]);
+			int x = Integer.parseInt(coordinatesStr[1]);
 			
-			int[] coordinates = {x, y};
-//			robot.moveTo(coordinates);
+			robot.getPilot().travelTo(new Vector2(x, y).div(4));
 			server.sendData("ACHIEVED");
 			
 		} else if (part1.equals("SCAN")) {
 			if (part2.equals("COLOUR")) {
-				String colour = "burgandy";
-//				colour = robot.scanColour()
-				server.sendData(colour);
+				String color = robot.getLeftColorModel().getColor().orElse("White").toLowerCase();
+				server.sendData(color);
 			}
 			
 		}
@@ -42,4 +44,7 @@ public class RobotInterface {
 		server.sendData(move);
 	}
 	
-}
+	
+	public void sendIR(String ir) throws IOException {
+		server.sendData(ir);
+	}

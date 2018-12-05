@@ -13,7 +13,6 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.border.LineBorder;
 
-
 /**
  * MapGUI Class Class to create GUI to display probability values on client
  *
@@ -53,7 +52,6 @@ public class MapGUI {
 		} catch (Exception e) {
 		}
 
-
 	}
 
 	/**
@@ -90,21 +88,19 @@ public class MapGUI {
 			}
 		});
 	}
-	
+
 	public void setAgentLocation(int x, int y, int c) {
 		JLabel label = labels[x][y];
 		label.setText("R");
 		JPanel cell = cells[x][y];
 		cell.setBorder(new LineBorder(cyan, 4));
-		
-		
+
 		if (c == 1) {
 			cell.setBackground(darkRed);
 		} else if (c == 2) {
 			cell.setBackground(cyan);
 		}
-		
-		
+
 		if (cell.getBackground() == Color.WHITE) {
 			label.setForeground(Color.DARK_GRAY);
 		}
@@ -154,7 +150,7 @@ public class MapGUI {
 		label.setFont(new Font("Arial", 1, 45));
 		label.setForeground(Color.WHITE);
 	}
-	
+
 	public void removeCellFormatting(int x, int y) {
 		JPanel cell = cells[x][y];
 		JLabel label = labels[x][y];
@@ -164,6 +160,18 @@ public class MapGUI {
 		label.setForeground(Color.WHITE);
 		cell.setBorder(new LineBorder(Color.BLACK, 2));
 	}
+
+	public void addPath(ArrayList<int[]> path) {
+		for (int i = 0; i < path.size(); i++) {
+			int[] pos = path.get(i);
+			if (i == path.size() - 1) {
+				cells[pos[0]][pos[1]].setBorder(new LineBorder(darkMagenta, 4));
+			} else {
+				cells[pos[0]][pos[1]].setBorder(new LineBorder(Color.magenta, 3));
+			}
+		}
+	}
+
 	/**
 	 * updateMap() Update the map with new values, robot and path positions
 	 * 
@@ -171,71 +179,98 @@ public class MapGUI {
 	 * @param ro array of x y position of the robot
 	 * @param p  2d array of x y positions for the path
 	 */
-	public void updateMap(ArrayList<int[]> oL, int[] aL, ArrayList<int[]> vL, int[] hL, ArrayList<int[]> cL, ArrayList<int[]> nL, int c) {
-		
-		
+	public void updateMap(ArrayList<int[]> oL, int[] aL, ArrayList<int[]> vL, int[] hL, ArrayList<int[]> cL,
+			ArrayList<int[]> nL, int c, ArrayList<int[]> path) {
+
 		ArrayList<int[]> obstacleLocations = oL;
-		int [] agentLocation = aL;
+		int[] agentLocation = aL;
 		ArrayList<int[]> victimLocations = vL;
-		int [] hospitalLocation = hL;
-		
+		int[] hospitalLocation = hL;
+
 		ArrayList<int[]> criticalLocations = cL;
 		ArrayList<int[]> nonCriticalLocations = nL;
-		
+
 		int carrying = c;
-		
-		// Remove Cell Formatting  - can cause interface flashing but fixing this isn't a priority.
+
+		// Remove Cell Formatting - can cause interface flashing but fixing this isn't a
+		// priority.
 		for (int x = 0; x < MAP_ROWS; x++) {
 			for (int y = 0; y < MAP_COLS; y++) {
 				removeCellFormatting(x, y);
 			}
 		}
-		
+
 		// Set the hospital
 		addHospital(hospitalLocation[0], hospitalLocation[1]);
-		
+
 		// Set the obstacles
 		for (int i = 0; i < obstacleLocations.size(); i++) {
 			addObstacle(obstacleLocations.get(i)[0], obstacleLocations.get(i)[1]);
 		}
-		
+
 		// Set the potential victim locations
 		for (int i = 0; i < victimLocations.size(); i++) {
 			addVictim(victimLocations.get(i)[0], victimLocations.get(i)[1]);
 		}
-		
+
 		// Set the potential victim locations
 		for (int i = 0; i < criticalLocations.size(); i++) {
 			addCriticalVictim(criticalLocations.get(i)[0], criticalLocations.get(i)[1]);
 		}
-		
+
 		// Set the potential victim locations
 		for (int i = 0; i < nonCriticalLocations.size(); i++) {
 			addNonCriticalVictim(nonCriticalLocations.get(i)[0], nonCriticalLocations.get(i)[1]);
 		}
-		
+
+		// Set the path, if there is one.
+		addPath(path);
+
 		// Set the current agent location
 		setAgentLocation(agentLocation[0], agentLocation[1], carrying);
 	}
-	
+
 	public void updateMap(ParamedicEnv.RobotBayModel model) {
-		
+
 		ArrayList<int[]> obstacleLocations = model.getObstacleLocations();
-		int [] agentLocation = model.getAgentPosition();
+		int[] agentLocation = model.getAgentPosition();
 		ArrayList<int[]> victimLocations = model.getPotentialVictimLocations();
-		int [] hospitalLocation = model.getHospitalLocation();
-		
+		int[] hospitalLocation = model.getHospitalLocation();
+
 		ArrayList<int[]> criticalLocations = model.getLocations(ParamedicEnv.CRITICAL);
 		ArrayList<int[]> nonCriticalLocations = model.getLocations(ParamedicEnv.NONCRITICAL);
-		
+
 		int carrying = 0;
 		if (model.carryingCritical == true) {
 			carrying = 1;
 		} else if (model.carryingNonCritical == true) {
 			carrying = 2;
 		}
-		
-		updateMap(obstacleLocations, agentLocation, victimLocations, hospitalLocation, criticalLocations, nonCriticalLocations, carrying);
+
+		ArrayList<int[]> path = new ArrayList<int[]>();
+		updateMap(obstacleLocations, agentLocation, victimLocations, hospitalLocation, criticalLocations,
+				nonCriticalLocations, carrying, path);
+	}
+
+	public void updateMap(ParamedicEnv.RobotBayModel model, ArrayList<int[]> path) {
+
+		ArrayList<int[]> obstacleLocations = model.getObstacleLocations();
+		int[] agentLocation = model.getAgentPosition();
+		ArrayList<int[]> victimLocations = model.getPotentialVictimLocations();
+		int[] hospitalLocation = model.getHospitalLocation();
+
+		ArrayList<int[]> criticalLocations = model.getLocations(ParamedicEnv.CRITICAL);
+		ArrayList<int[]> nonCriticalLocations = model.getLocations(ParamedicEnv.NONCRITICAL);
+
+		int carrying = 0;
+		if (model.carryingCritical == true) {
+			carrying = 1;
+		} else if (model.carryingNonCritical == true) {
+			carrying = 2;
+		}
+
+		updateMap(obstacleLocations, agentLocation, victimLocations, hospitalLocation, criticalLocations,
+				nonCriticalLocations, carrying, path);
 	}
 
 	public class MapPane extends JPanel {
@@ -267,10 +302,9 @@ public class MapGUI {
 						// Otherwise we need to put a label with the probability in the cell
 						JLabel label = new JLabel();
 						label.setFont(new Font("Arial", 1, 30));
- 						cell.add(label);
+						cell.add(label);
 						labels[r - 1][c - 1] = label;
 						cells[r - 1][c - 1] = cell;
-						
 
 					}
 
@@ -278,7 +312,7 @@ public class MapGUI {
 					add(cell);
 				}
 			}
-			
+
 		}
 
 	}

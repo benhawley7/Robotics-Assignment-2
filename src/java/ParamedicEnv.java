@@ -112,6 +112,7 @@ public class ParamedicEnv extends Environment {
 
 				// Get the path from the agent to the target location
 				Pathfinder.Node[] path = p.getPath(agentPos[0], agentPos[1], x, y);
+				ArrayList<int[]> formattedPath = p.convertToIntArrayList(path);
 
 				// Go through the path, starts at 1 because index 0 is null for some reason
 				for (int i = 0; i < path.length; i++) {
@@ -126,11 +127,18 @@ public class ParamedicEnv extends Environment {
 
 					}
 
+					int pathX = path[i].x;
+					int pathY = path[i].y;
+					
+					
 					// Update the agents position to the next move
-					model.setAgPos(0, path[i].x, path[i].y);
-
+					model.setAgPos(0, pathX, pathY);
+					
+//					formattedPath.remove(i);
+					logger.info("" + formattedPath.size());
+					
 					// Update the map with the new location
-					mapView.updateMap(model);
+					mapView.updateMap(model, formattedPath);
 
 					// Sleep for testing purposes
 					Thread.sleep(1000);

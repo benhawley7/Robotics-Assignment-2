@@ -61,6 +61,17 @@ public class Pathfinder{
 		
 	}
 	
+	public ArrayList<int[]> convertToIntArrayList(Node[] path) {
+		ArrayList<int[]> newPath = new ArrayList<int[]>();
+		
+		for (int i = 0; i < path.length; i++) {
+			int[] move = {path[i].x, path[i].y};
+			newPath.add(move);
+		}
+
+		return newPath;
+	}
+	
 	
 	public void updateCells(ParamedicEnv.RobotBayModel model) {
 		ArrayList<int[]> obstaclesPos = model.getObstacleLocations();
