@@ -1,4 +1,5 @@
 import java.util.HashSet;
+import java.util.Stack;
 import javax.swing.*;
 import java.awt.*;
 import java.util.Scanner;
@@ -40,6 +41,12 @@ public class ParticleFilter{
 		public int hashCode(){return toString().hashCode();}
 	}
 	
+	public boolean inGrid(int x, int y){
+		
+		return x >= 0 && x < dimX && y >=0 && y < dimY;
+		
+	}
+	
 	public ParticleFilter(int dimX, int dimY){
 		
 		this.dimX  = dimX;
@@ -63,7 +70,7 @@ public class ParticleFilter{
 	
 	public boolean addObstacle(int x, int y){
 		
-		if(x>=0 && x<dimX && y>=0 && y<dimY){
+		if(inGrid(x,y)){
 
 			grid[x][y] = true;
 			
@@ -74,12 +81,68 @@ public class ParticleFilter{
 		}else return false;
 	}
 	
-	public void removeParticlesAt(int x, int y){
+	public boolean removeParticlesAt(int x, int y){
 		
-		particles.remove(new Particle(x,y,Direction.XP));
-		particles.remove(new Particle(x,y,Direction.XN));
-		particles.remove(new Particle(x,y,Direction.YP));
-		particles.remove(new Particle(x,y,Direction.YN));
+		if(inGrid(x,y)){
+			particles.remove(new Particle(x,y,Direction.XP));
+			particles.remove(new Particle(x,y,Direction.XN));
+			particles.remove(new Particle(x,y,Direction.YP));
+			particles.remove(new Particle(x,y,Direction.YN));
+			
+			return true;
+			
+		}else return false;
+	}
+	
+	public void obstacleInfront(boolean isInfront){
+		
+		Stack<Particle> invalidParticles = new Stack<Particle>();
+		
+		for(Particle p : particles){
+			
+			int targetX = -1;
+			int targetY = -1;
+			
+			if(p.direction.equals(Direction.XP)){
+				
+				targetX = p.x+1;
+				targetY = p.y;
+				
+			}else if(p.direction.equals(Direction.YN)){
+				
+				targetX = p.x;
+				targetY = p.y-1;
+				
+			}else if(p.direction.equals(Direction.XN)){
+				
+				targetX = p.x-1;
+				targetY = p.y;
+				
+			}else if(p.direction.equals(Direction.YP)){
+				
+				targetX = p.x;
+				targetY = p.y+1;
+				
+			}
+			
+			if(inGrid(targetX,targetY)){
+				
+				boolean target = grid[targetX][targetY];
+				if(target != isInfront) invalidParticles.push(p);
+				
+			} else {
+				
+				if(!isInfront) invalidParticles.push(p);
+				
+			}
+			
+		}
+		for(Particle ip: invalidParticles){
+			
+			particles.remove(ip);
+			
+		}
+		
 		
 	}
 	
@@ -301,10 +364,11 @@ public class ParticleFilter{
 		System.out.println(filter.particles.size());
 		Particle x = new Particle(1,2,Direction.XP);
 		Particle y = new Particle(1,2,Direction.XP);
-		filter.rotateParticles180();
 		System.out.println(x.hashCode() == y.hashCode());
 		System.out.println(filter.particles.contains(x));
 		System.out.println(filter.toString());
+		filter.obstacleInfront(false);
+		
 		
 		JFrame frame = new JFrame();
 		frame.setPreferredSize(new Dimension(400, 400));

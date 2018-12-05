@@ -1,5 +1,5 @@
 import java.io.IOException;
-
+/*
 public class RobotInterface {
 	
 	protected final Logger logger = new Logger(getClass());
@@ -48,3 +48,4 @@ public class RobotInterface {
 	public void sendIR(String ir) throws IOException {
 		server.sendData(ir);
 	}
+}*/
