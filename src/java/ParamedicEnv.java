@@ -25,7 +25,7 @@ public class ParamedicEnv extends Environment {
 	private Client client;
 	private int perceptIndex = 0;
 
-	private boolean isSimulatorMode = false;
+	private boolean isSimulatorMode = true;
 
 	/** Called before the MAS execution with the args informed in .mas2j */
 	@Override

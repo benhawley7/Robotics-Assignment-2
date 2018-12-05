@@ -48,9 +48,8 @@ public class ParticleFilter{
 		
 		particles = new HashSet<Particle>(dimX*dimY*4);
 		
-		particles.add(new Particle(3,3,Direction.XP));
 		
-		/*for(int x = 0; x<dimX; x++){
+		for(int x = 0; x<dimX; x++){
 			for(int y = 0; y<dimY; y++){
 				
 				particles.add(new Particle(x,y,Direction.XP));
@@ -59,7 +58,7 @@ public class ParticleFilter{
 				particles.add(new Particle(x,y,Direction.YN));
 				
 			}			
-		}	*/	
+		}	
 	}
 	
 	public boolean addObstacle(int x, int y){
@@ -255,20 +254,20 @@ public class ParticleFilter{
 					
 				}else if(xp){
 					
-					printString += '\u2579';
+					printString += '\u257A';
 					
 				}else if(xn){
 					
-					printString += '\u257B';
+					printString += '\u2578';
 					
 				}else if(yp){
 					
-					printString += '\u257A';
+					printString += '\u2579';
 					
 					
 				}else if(yn){
 					
-					printString += '\u2578';
+					printString += '\u257B';
 					
 				}else{
 					
@@ -290,11 +289,8 @@ public class ParticleFilter{
 		ParticleFilter filter = new ParticleFilter(6,6);
 		System.out.println(filter.particles);
 		System.out.println(filter.particles.size());
-		//filter.addObstacle(0,0);
+		filter.addObstacle(0,0);
 		System.out.println(filter.particles.size());
-		//filter.moveParticlesForward();
-		//filter.moveParticlesForward();
-		//filter.moveParticlesForward();
 		System.out.println(filter.particles.size());
 		Particle x = new Particle(1,2,Direction.XP);
 		Particle y = new Particle(1,2,Direction.XP);
