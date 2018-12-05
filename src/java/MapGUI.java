@@ -46,11 +46,16 @@ public class MapGUI {
 	public static void main(String[] args) {
 
 		MapGUI mapGUI = new MapGUI();
+		
 		try {
-			Thread.sleep(5000);
+			Thread.sleep(1000);
 
 		} catch (Exception e) {
 		}
+		mapGUI.setCellParticles(0, 0, '\u254B');
+		mapGUI.setCellParticles(1, 1, '\u253B');
+		mapGUI.setCellParticles(2, 2, '\u2533');
+		mapGUI.setCellParticles(3, 3, '\u2523');
 
 	}
 
@@ -106,6 +111,18 @@ public class MapGUI {
 		}
 	}
 
+	public void setCellParticles(int x, int y, char c) {
+		JLabel label = labels[x][y];
+		label.setFont(new Font("monospaced", 1, 50));
+		label.setText("" + c);
+	}
+	
+	public void setCellParticles(int x, int y, String s) {
+		JLabel label = labels[x][y];
+		label.setFont(new Font("monospaced", 1, 50));
+		label.setText(s);
+	}
+	
 	public void addObstacle(int x, int y) {
 		JPanel cell = cells[x][y];
 		JLabel label = labels[x][y];
