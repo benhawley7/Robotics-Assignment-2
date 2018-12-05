@@ -1,8 +1,12 @@
+import java.awt.Dimension;
+import java.awt.Font;
 import java.util.HashSet;
-import java.util.Stack;
-import javax.swing.*;
-import java.awt.*;
+import java.util.List;
 import java.util.Scanner;
+import java.util.Stack;
+
+import javax.swing.JFrame;
+import javax.swing.JTextArea;
 
 public class ParticleFilter{
 	
@@ -13,9 +17,9 @@ public class ParticleFilter{
 	
 	public HashSet<Particle> particles;
 	
-	private enum Direction{XP,XN,YP,YN}
+	enum Direction{XP,XN,YP,YN}
 	
-	private static class Particle{
+	static class Particle{
 		int x;
 		int y;
 		Direction direction;
@@ -79,6 +83,22 @@ public class ParticleFilter{
 			return true;
 			
 		}else return false;
+	}
+	
+	public void removeAllBut(List<int[]> keepCells) {
+		for (int x = 0; x < dimX; x++)
+			for (int y = 0; y < dimY; y++) {
+				boolean skip = false;
+				for (int[] potVictim : keepCells) {
+					if (potVictim[0] == x && potVictim[1] == y) {
+						skip = true;
+						break;
+					}
+				}
+				if (skip) continue;
+				
+				removeParticlesAt(x, y);
+			}
 	}
 	
 	public boolean removeParticlesAt(int x, int y){

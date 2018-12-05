@@ -54,7 +54,7 @@
 			-proposal(CNPId,_,_).
 	
 	/*Plan Library for Beliefs */
-		
+	
 		-carrying(_):
 			rescueMission(Critical,NonCritical)&
 			Critical = 0 &
@@ -62,7 +62,10 @@
 			~carryingVictim(_)
 			<-
 			allRescued.
-	
+		
+		+rescueMission(0,0)<-
+			finish.
+			
 		//When a rescue mission has been started, and there is a hospital,
 		//a victim and an obstacle:
 		+rescueMission(Critical,NonCritical): 
@@ -75,6 +78,7 @@
 			criticals(Critical);
 			nextTarget;
 			.print("Rescue mission target found")
+			.wait(1000);
 			?nearest(X,Y);
 			!rescue(X,Y).
 		
@@ -96,10 +100,13 @@
 			addObstacle(X,Y);
 			.print(obstacle,X,Y).
 		
-		+nearest(X,Y): nearest(I,J) & not X=I & not Y = J<-
-			-nearest(I,J)[source(_)];
-			?nearest(A,B)[source(S)];
-			.print("Nearest: ",A,B,S
+		@addNear[atomic]+newNearest(X,Y,Index)<-
+			.print("Current nearest: ",X,Y);
+			-nearest(I,J);
+			+nearest(X,Y).
+			//-newNearest[source(percerpt)].
+			//?nearest(A,B);
+			//.print("New Nearest: ",A,B).
 		
 		+critical(X,Y): location(self,X,Y) <-
 			criticalVictimAt(X,Y);
@@ -109,6 +116,8 @@
 			-critical(X,Y)[source(_)];
 			noVictimAt(X,Y);
 			-critical(X,Y);
+			?rescueMission(C,NC);
+			if(C=1 & NC = 0){allLocated};
 			!moveTo(0,0).
 		
 		+~critical(X,Y):
@@ -121,6 +130,7 @@
 			-location(victim,X,Y)[source(_)];
 			nextTarget;
 			.print("non Critical target found");
+			.wait(1000);
 			?nearest(A,B);
 			!rescue(A,B).	
 			
@@ -136,6 +146,8 @@
 			+carryingVictim(~critical);
 			-location(victim,X,Y)[source(_)];
 			-~critical(X,Y)[source(_)];
+			?rescueMission(C,NC);
+			if(C=0 & NC = 1){allLocated};
 			!moveTo(0,0).
 			
 		+location(self,0,0): carryingVictim(S) <-
@@ -146,12 +158,22 @@
 			if(S=critical){+rescueMission(C-1,NC)};
 			if(S=~critical){+rescueMission(C,NC-1)}.
 			
+		+location(self,X,Y): ~critical(X,Y) <-
+			pickUpVictim(X,Y);
+			+carryingVictim(~critical);
+			-location(victim,X,Y)[source(_)];
+			-~critical(X,Y)[source(_)];
+			?rescueMission(C,NC);
+			if(C=0 & NC = 1){allLocated};
+			!moveTo(0,0).
+			
 		+colour(X,Y,white)<-
 			-location(victim,X,Y)[source(_)];
 			noVictimAt(X,Y);
 			.print("No victim at ",X,Y);
 			nextTarget;
 			.print("No victim target found");
+			.wait(1000);
 			?nearest(A,B);
 			!rescue(A,B).
 			

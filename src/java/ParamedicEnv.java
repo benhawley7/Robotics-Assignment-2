@@ -1,14 +1,19 @@
 
 // Environment code for project doctor2018
 
-import jason.asSyntax.*;
-import jason.environment.*;
-import jason.environment.grid.GridWorldModel;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.logging.*;
+import java.util.List;
+import java.util.logging.Logger;
 
-import jason.asSemantics.*;
+import jason.asSyntax.Literal;
+import jason.asSyntax.NumberTerm;
+import jason.asSyntax.Structure;
+import jason.environment.Environment;
+import jason.environment.grid.GridWorldModel;
+
+import java.util.Random;
+import java.util.Stack;
 
 public class ParamedicEnv extends Environment {
 
@@ -25,7 +30,7 @@ public class ParamedicEnv extends Environment {
 	private Client client;
 	private int perceptIndex = 0;
 
-	private boolean isSimulatorMode = true;
+	private boolean isSimulatorMode = false;
 
 	/** Called before the MAS execution with the args informed in .mas2j */
 	@Override
@@ -67,6 +72,89 @@ public class ParamedicEnv extends Environment {
 				// Update the map view
 				mapView.updateMap(model);
 
+			} else if (action.getFunctor().equals("localise")) {
+				Literal localised = Literal.parseLiteral("localised");
+//				if (isSimulatorMode == true) {
+//					addPercept(localised);
+//					return true;
+//				}
+//	
+				ParticleFilter filter = new ParticleFilter(GSize, GSize);
+				ArrayList<int[]> obstacleLocations = model.getObstacleLocations();
+				
+				obstacleLocations.forEach((obstacle) -> {
+					filter.addObstacle(obstacle[0], obstacle[1]);
+				});
+				
+				mapView.updateFilter(filter.toString());
+				
+				int cameFrom = -1;
+				
+				while (filter.particles.size() > 1) {
+					updateFilterColor(filter);
+					
+					boolean[] validDirection = new boolean[4];
+					Stack<Integer> validDirections = new Stack<Integer>();
+					
+					for (int i = 0; i < 4; i++) {
+						client.sendData("SCAN:RANGE");
+						
+						String data = client.awaitData();
+						
+						if(data != "Infinity")validDirection[i] = Double.parseDouble(data) > 0.1875;
+						else validDirection[i] = true;
+						filter.obstacleInfront(validDirection[i]);
+						mapView.updateFilter(filter.toString());
+
+						
+						client.sendData("ROTATE:90");
+						client.awaitData();
+						filter.rotateParticlesClockwise();
+						mapView.updateFilter(filter.toString());
+
+					}
+					
+					
+					for(int d = 0; d< 4; d++) {
+						
+						if(validDirection[d] && cameFrom!=d) validDirections.push(d);
+					}
+					
+					int direction = -1;
+					
+					if(validDirections.size()>0) {
+						direction = (new Random()).nextInt(validDirections.size());
+						
+					}
+					else direction = cameFrom;
+						
+					cameFrom = (direction+2)%4;
+
+					client.sendData("ROTATE:" + 90*(direction+1));
+					client.awaitData();
+					
+					for(int i = 0; i< direction; i++) filter.rotateParticlesClockwise();
+					mapView.updateFilter(filter.toString());
+
+					
+					client.sendData("FORWARD:1");
+					client.awaitData();
+					filter.moveParticlesForward();
+					mapView.updateFilter(filter.toString());
+				}
+				
+				ParticleFilter.Particle particle = (ParticleFilter.Particle) filter.particles.toArray()[0];
+				
+				logger.info("Yeah mate we reckon we are localised, nay chance. X:" + particle.x + " Y:" + particle.y + "Heading: " + particle.direction.ordinal());
+				
+				client.sendData("SET:" + particle.x + "," + particle.y + "," + particle.direction.ordinal());			
+				client.awaitData();
+				
+				while (true) Thread.yield();
+				
+				
+//				return true;				
+//				
 			} else if (action.getFunctor().equals("addObstacle")) {
 				// Get x and y terms
 				int x = (int) ((NumberTerm) action.getTerm(0)).solve();
@@ -360,6 +448,32 @@ public class ParamedicEnv extends Environment {
 		super.stop();
 	}
 
+	public void updateFilterColor(ParticleFilter filter) throws IOException {
+		client.sendData("SCAN:COLOUR");
+		String colour = client.awaitData();
+		
+		if (colour.equals("yellow")) {
+			for (int x = 0; x < GSize; x++) {
+				for (int y = 0; y < GSize; y++) {
+					if (x == y && y == 0) continue;
+					filter.removeParticlesAt(x, y);
+				}
+			}
+		} else if (colour.equals("white")) {
+			
+			int[] hospitalLocation = model.getHospitalLocation();
+			filter.removeParticlesAt(hospitalLocation[0], hospitalLocation[1]);
+	
+			List<int[]> possibleLocations = model.getLocations(VICTIM);
+			for (int x = 0; x < possibleLocations.size(); x++) {
+				int[] location = possibleLocations.get(x);
+				filter.removeParticlesAt(location[0], location[1]);
+			}
+		} else if (colour.equals("burgandy") || colour.equals("cyan")) {
+			filter.removeAllBut(model.getPotentialVictimLocations());
+		}
+	}
+	
 	// ======================================================================
 	class RobotBayModel extends GridWorldModel {
 
@@ -402,6 +516,7 @@ public class ParamedicEnv extends Environment {
 					}
 				}
 			}
+			
 			return obstacles;
 		}
 

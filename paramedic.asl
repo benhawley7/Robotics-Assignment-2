@@ -68,7 +68,8 @@
 			
 		//When a rescue mission has been started, and there is a hospital,
 		//a victim and an obstacle:
-		+rescueMission(Critical,NonCritical): 
+		+rescueMission(Critical,NonCritical):
+			localised &
 			location(hospital,_,_) & 
 			(location(victim,_,_) | ~critical(_,_) | critical(_,_)) &
 			location(obstacle,_,_)&
@@ -81,6 +82,14 @@
 			.wait(1000);
 			?nearest(X,Y);
 			!rescue(X,Y).
+			
+		+rescueMission(C,NC):
+			location(hospital,_,_) & 
+			(location(victim,_,_) | ~critical(_,_) | critical(_,_)) &
+			location(obstacle,_,_)
+			<-
+			localise;
+			-+rescueMission(C,NC).
 		
 		//If we have tried to start a rescue mission without knowing
 		// the scenario, wait until we have the scenario and try again

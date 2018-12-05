@@ -111,10 +111,23 @@ public class MapGUI {
 		}
 	}
 
+	public void updateFilter(String filterString) {
+		String[] map = filterString.split("\n");
+		
+		for (int y = 0; y < map.length; y++) {
+			char[] chars = map[y].toCharArray();
+			for (int x = 0; x < chars.length; x++) {
+				char c = chars[x];
+				setCellParticles(x, map.length-1-y, c);
+			}
+		}
+	}
+	
 	public void setCellParticles(int x, int y, char c) {
 		JLabel label = labels[x][y];
 		label.setFont(new Font("monospaced", 1, 50));
 		label.setText("" + c);
+		label.setForeground(Color.RED);
 	}
 	
 	public void setCellParticles(int x, int y, String s) {
