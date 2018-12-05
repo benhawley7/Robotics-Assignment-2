@@ -307,7 +307,7 @@ public class ParticleFilter{
 					
 				}else if(xp && yp){
 					
-					printString += '\u2515';
+					printString += '\u2517';
 					
 				}else if(xp && yn){
 					
@@ -367,7 +367,7 @@ public class ParticleFilter{
 		System.out.println(x.hashCode() == y.hashCode());
 		System.out.println(filter.particles.contains(x));
 		System.out.println(filter.toString());
-		filter.obstacleInfront(false);
+		filter.obstacleInfront(true);
 		
 		
 		JFrame frame = new JFrame();
