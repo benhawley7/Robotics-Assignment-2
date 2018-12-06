@@ -11,27 +11,68 @@ import javax.swing.JTextArea;
 
 public class ParticleFilter{
 	
+	/**
+	 * Each element of grid is true if an obstacle is there, false otherwise
+	 */
 	private final boolean[][] grid;
 	
+	/**
+	 * The X dimension of the grid
+	 */
 	private final int dimX;
+	
+	/**
+	 * The Y dimension of the grid
+	 */
 	private final int dimY;
 	
+	/**
+	 * The set of particles in the filter
+	 */
 	public HashSet<Particle> particles;
 	
+	/**
+	 * An enumeration of the four cardinal directions, positive Y, positive X, negative Y, negative X
+	 */
 	private enum Direction{YP, XP, YN, XN}
-//	private enum Direction{XP,XN,YP,YN}
-//	
+	
+	/**
+	 * A class to store the information on each particle in the filter
+	 */
 	private static class Particle{
+		
+		/**
+		 * The X coordinate of the particle in the grid
+		 */
 		int x;
+		
+		/**
+		 * The Y coordinate of the particle in the grid
+		 */
 		int y;
+		
+		/**
+		 * The cardinal direction the particle is facing
+		 */
 		Direction direction;
 		
+		/**
+		 * 
+		 * @param x The x coordinate of the particle in the grid
+		 * @param y The y coordinate of the particle in the grid
+		 * @param d The cardinal direction the particle is facing
+		 */
 		public Particle(int x, int y, Direction d){
 			this.x=x;
 			this.y=y;
 			this.direction = d;	
 		}
 		
+		/**
+		 * Compares to particles
+		 * If two particles are in the same space on the grid and facing the same direction, this return true, false otherwise
+		 * @param o The particle this particle is compared with
+		 */
 		@Override
 		public boolean equals(Object o){
 			if(o instanceof Particle){
@@ -40,19 +81,38 @@ public class ParticleFilter{
 			} else return false;
 		}
 		
+		/**
+		 * This method is used to generate a hashcode for this object so that when two particles are
+		 * the same, they have the same hascode
+		 */
 		@Override
 		public String toString(){return "("+x+","+y+","+direction.toString()+")";}
 		
+		/**
+		 * Returns the hashcode of this particle
+		 */
 		@Override
 		public int hashCode(){return toString().hashCode();}
 	}
 	
+	/**
+	 * Checks if the given coordinate is within {@link #grid}
+	 * @param x The x coordinate to check
+	 * @param y The y coordinate to check
+	 * @return True if the coordinate is in the grid, false otherwise
+	 */
 	public boolean inGrid(int x, int y){
 		
 		return x >= 0 && x < dimX && y >=0 && y < dimY;
 		
 	}
 	
+	/**
+	 * Constructs a new {@link ParticleFilter} with given dimensions.
+	 * Each space in the filter contains 4 particles, one facing each of the cardinal directions.
+	 * @param dimX The x dimension of the particle filter
+	 * @param dimY The y dimension of the particle filter
+	 */
 	public ParticleFilter(int dimX, int dimY){
 		
 		this.dimX  = dimX;
@@ -61,10 +121,11 @@ public class ParticleFilter{
 		
 		particles = new HashSet<Particle>(dimX*dimY*4);
 		
-		
+		//For every cell:
 		for(int x = 0; x<dimX; x++){
 			for(int y = 0; y<dimY; y++){
 				
+				//Create a new particle for each direction and add it to the set of particles
 				particles.add(new Particle(x,y,Direction.XP));
 				particles.add(new Particle(x,y,Direction.XN));
 				particles.add(new Particle(x,y,Direction.YP));
@@ -74,12 +135,20 @@ public class ParticleFilter{
 		}	
 	}
 	
+	/**
+	 * 
+	 * @return The number of particles remaining in the filter
+	 */
 	public int getNumberParticles(){
 		
 		return particles.size();
 		
 	}
 	
+	/**
+	 * Returns the position and direction of the final particle. 
+	 * @return An array containing {x coordinate, y coordinate, direction}, or null if there is not exactly one particle left
+	 */
 	public int[] getPosition(){
 		
 		if(getNumberParticles() != 1) return null;
@@ -90,6 +159,13 @@ public class ParticleFilter{
 		
 	}
 	
+	/**
+	 * Removes all particles at a specified cell
+	 * @param x The x coordinate of the cell
+	 * @param y The y coordinate of the cell
+	 * 
+	 * @return True if the specified cell is in bounds, false otherwise
+	 */
 	public boolean addObstacle(int x, int y){
 		
 		if(inGrid(x,y)){
@@ -103,10 +179,19 @@ public class ParticleFilter{
 		}else return false;
 	}
 	
+	/**
+	 * Removes all particles not in the list of specified cells
+	 * @param keepCells A list of the specified cells, each one an array containing {x coordinate, y coordinate}
+	 */
 	public void removeAllBut(List<int[]> keepCells) {
+		
+		//For each cell
 		for (int x = 0; x < dimX; x++)
 			for (int y = 0; y < dimY; y++) {
+				
 				boolean skip = false;
+				
+				//For each
 				for (int[] potVictim : keepCells) {
 					if (potVictim[0] == x && potVictim[1] == y) {
 						skip = true;
