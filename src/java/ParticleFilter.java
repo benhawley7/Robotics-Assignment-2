@@ -1,5 +1,6 @@
 import java.awt.Dimension;
 import java.awt.Font;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Scanner;
@@ -17,9 +18,9 @@ public class ParticleFilter{
 	
 	public HashSet<Particle> particles;
 	
-	enum Direction{XP,XN,YP,YN}
+	private enum Direction{YP, XP, YN, XN}
 	
-	static class Particle{
+	private static class Particle{
 		int x;
 		int y;
 		Direction direction;
@@ -70,6 +71,22 @@ public class ParticleFilter{
 				
 			}			
 		}	
+	}
+	
+	public int getNumberParticles(){
+		
+		return particles.size();
+		
+	}
+	
+	public int[] getPosition(){
+		
+		if(getNumberParticles() != 1) return null;
+		
+		Particle p = (Particle)(particles.toArray()[0]);
+		
+		return new int[]{p.x, p.y, p.direction.ordinal()};
+		
 	}
 	
 	public boolean addObstacle(int x, int y){
@@ -376,18 +393,17 @@ public class ParticleFilter{
 	
 	public static void main(String[] args){
 		ParticleFilter filter = new ParticleFilter(6,6);
-		System.out.println(filter.particles);
-		System.out.println(filter.particles.size());
-		filter.addObstacle(0,0);
-		filter.addObstacle(3,4);
-		System.out.println(filter.particles.size());
-		System.out.println(filter.particles.size());
-		Particle x = new Particle(1,2,Direction.XP);
-		Particle y = new Particle(1,2,Direction.XP);
-		System.out.println(x.hashCode() == y.hashCode());
-		System.out.println(filter.particles.contains(x));
-		System.out.println(filter.toString());
-		filter.obstacleInfront(true);
+		filter.addObstacle(2,2);
+		filter.addObstacle(3,2);
+		filter.addObstacle(4,3);
+		filter.addObstacle(5,0);
+		
+		ArrayList<int[]> list  = new ArrayList<int[]>();
+		list.add(new int[] {0,0});
+		
+		filter.removeAllBut(list);
+		
+		filter.obstacleInfront(false);
 		
 		
 		JFrame frame = new JFrame();

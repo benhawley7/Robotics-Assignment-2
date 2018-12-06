@@ -79,80 +79,149 @@ public class ParamedicEnv extends Environment {
 //					return true;
 //				}
 //	
+				// Create a particle filter
 				ParticleFilter filter = new ParticleFilter(GSize, GSize);
+				
+				// Get the locations of the obstacles in the arena
 				ArrayList<int[]> obstacleLocations = model.getObstacleLocations();
 				
+				// For obstacle, add the location to the filter
 				obstacleLocations.forEach((obstacle) -> {
 					filter.addObstacle(obstacle[0], obstacle[1]);
 				});
 				
+				// Update map with filter data
 				mapView.updateFilter(filter.toString());
 				
-				int cameFrom = -1;
-				
-				while (filter.particles.size() > 1) {
-					updateFilterColor(filter);
+				// Store the direction we just moved in
+				int directionLastMoved = 0;
+			
+				// While we have more than one particle
+				outer: while (filter.getNumberParticles() > 1) {
 					
+					// Get the colour of the current position and update the particle filter
+					client.sendData("SCAN:COLOUR");
+					String colour = client.awaitData();
+					logger.info("Cell is " + colour);
+					eliminateParticlesByColour(filter, colour);
+					mapView.updateFilter(filter.toString());
+					Thread.sleep(5000);
+					
+					// Array of booleans to store whether we can move in a direction
+					// based upon whether there is an obstacle or wall
 					boolean[] validDirection = new boolean[4];
+					
+					// Stack to store the index of the valid directions, excluding the cameFrom direction
 					Stack<Integer> validDirections = new Stack<Integer>();
 					
+					// For all potential directions
 					for (int i = 0; i < 4; i++) {
-						client.sendData("SCAN:RANGE");
 						
+						if(filter.getNumberParticles() == 1)break outer;
+						
+						// Scan in the direction and receive a range value
+						client.sendData("SCAN:RANGE");
 						String data = client.awaitData();
 						
+						logger.info("Scan Result: "+data);
+						Thread.sleep(3000);
+						
+						// If the reading is not infinity and range greater than a quarter of a cell
+						// then we know there is not an obstacle, so it is an explorable direction
 						if(data != "Infinity")validDirection[i] = Double.parseDouble(data) > 0.1875;
 						else validDirection[i] = true;
-						filter.obstacleInfront(validDirection[i]);
+						
+						// Update the filter with the potential obstacle of the direction
+						filter.obstacleInfront(!validDirection[i]);
+						
+						// Update the map view
 						mapView.updateFilter(filter.toString());
 
-						
+						// Rotate 90 to scan the next direction
 						client.sendData("ROTATE:90");
 						client.awaitData();
+						
+						Thread.sleep(2000);
+						
+						// Update the filter with the rotation
 						filter.rotateParticlesClockwise();
+						
+						// Update the map view
 						mapView.updateFilter(filter.toString());
+						
+						logger.info("Direction " + i + " is "+validDirection[i]);
 
 					}
 					
-					
+					// Set the stack to be all the directions we can move in, excluding the direction we just came from 
 					for(int d = 0; d< 4; d++) {
-						
-						if(validDirection[d] && cameFrom!=d) validDirections.push(d);
+						if(validDirection[d] && (directionLastMoved+2)%4!=d) validDirections.push(d);
 					}
 					
-					int direction = -1;
+					// Declare the direction we want to move to, relative to the last direction we moved in					
+					int nextDirection = 2;
 					
+					// If we have valid directions
 					if(validDirections.size()>0) {
-						direction = (new Random()).nextInt(validDirections.size());
+						// Pick a random valid direction
+						logger.info("Valid Directions: " + validDirections.toString());
+						nextDirection = validDirections.elementAt((new Random()).nextInt(validDirections.size()));
 						
 					}
-					else direction = cameFrom;
-						
-					cameFrom = (direction+2)%4;
-
-					client.sendData("ROTATE:" + 90*(direction+1));
-					client.awaitData();
+					// Otherwise backtrack, to explore a new path
+					else nextDirection = (directionLastMoved+2)%4;
 					
-					for(int i = 0; i< direction; i++) filter.rotateParticlesClockwise();
+					logger.info("Next direction: " + nextDirection);
+					
+					// Calculate the rotation we need
+					int rotation = 90*((nextDirection)%4);
+					
+					logger.info("Rotating " + rotation + "degrees");
+					
+					// If rotation does not equal 0, rotate
+					if(rotation!=0) {
+						client.sendData("ROTATE:" + rotation);
+						client.awaitData();
+					}
+					
+					Thread.sleep(2000);
+					
+					// Update particle filter with the direction
+					for(int i = 0; i< nextDirection; i++) filter.rotateParticlesClockwise();
+					
+					// Update the map view
 					mapView.updateFilter(filter.toString());
 
-					
+					// Move forward
 					client.sendData("FORWARD:1");
 					client.awaitData();
+					
+					// Move the particles forward
 					filter.moveParticlesForward();
+					
+					// Update the map view
 					mapView.updateFilter(filter.toString());
+					
+					directionLastMoved = nextDirection;
 				}
 				
-				ParticleFilter.Particle particle = (ParticleFilter.Particle) filter.particles.toArray()[0];
+				// Get the last particle
+				int[] particle = filter.getPosition();
 				
-				logger.info("Yeah mate we reckon we are localised, nay chance. X:" + particle.x + " Y:" + particle.y + "Heading: " + particle.direction.ordinal());
-				
-				client.sendData("SET:" + particle.x + "," + particle.y + "," + particle.direction.ordinal());			
+				if(particle != null) 
+				logger.info("Yeah mate we reckon we are localised, nay chance. X:" + particle[0] + " Y:" + particle[1] + "Heading: " + particle[2]);
+				else logger.info("No particles left in filter");
+				// Set the robots odometry
+				client.sendData("SET:" + particle[0] + "," + particle[1] + "," + particle[2]);			
 				client.awaitData();
 				
+
+				
+				model.setAgPos(0, particle[0], particle[1]);
+				Literal location = Literal.parseLiteral("location(self, 0, 0)");
+				addPercept("paramedic", location);
+				
 				while (true) Thread.yield();
-				
-				
 //				return true;				
 //				
 			} else if (action.getFunctor().equals("addObstacle")) {
@@ -448,10 +517,7 @@ public class ParamedicEnv extends Environment {
 		super.stop();
 	}
 
-	public void updateFilterColor(ParticleFilter filter) throws IOException {
-		client.sendData("SCAN:COLOUR");
-		String colour = client.awaitData();
-		
+	public void eliminateParticlesByColour(ParticleFilter filter, String colour) throws IOException {
 		if (colour.equals("yellow")) {
 			for (int x = 0; x < GSize; x++) {
 				for (int y = 0; y < GSize; y++) {
@@ -481,8 +547,8 @@ public class ParamedicEnv extends Environment {
 			super(GSize, GSize, 1); // The third parameter is the number of agents
 
 			setAgPos(0, 0, 0);
-			Literal location = Literal.parseLiteral("location(self, 0, 0)");
-			addPercept("paramedic", location);
+//			Literal location = Literal.parseLiteral("location(self, 0, 0)");
+//			addPercept("paramedic", location);
 
 		}
 

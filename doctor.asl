@@ -22,22 +22,22 @@ all_proposals_received(CNPId)
 // ========================================================================
 // The following beliefs will be shared
 location(hospital,0,0).
-location(obstacle,1,1).
-location(obstacle,1,4).
-location(obstacle,4,1).
-location(obstacle,4,4).
-location(victim,2,0).
-location(victim,2,2).
-location(victim,2,4).
-location(victim,5,4).
-location(victim,0,5).
+location(obstacle,2,2).
+location(obstacle,3,2).
+location(obstacle,4,3).
+location(obstacle,5,0).
+location(victim,0,2).
+location(victim,1,5).
+location(victim,2,3).
+location(victim,4,5).
+location(victim,5,1).
 
 // ========================================================================
 // The following beliefs MUST NOT be shared, but represent the location of
 // actual victims and their critical status
-critical(2,0).
-critical(2,2).
-~critical(5,4).
+critical(2,3).
+~critical(4,5).
+~critical(5,1).
 
 // ========================================================================
 // Initial goals
@@ -100,3 +100,4 @@ critical(2,2).
 +!announce_result(CNPId,[offer(_,LAg)|T],WAg)
    <- .send(LAg,tell,reject_proposal(CNPId));
       !announce_result(CNPId,T,WAg).
+      
