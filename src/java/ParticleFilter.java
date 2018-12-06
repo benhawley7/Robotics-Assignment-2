@@ -19,7 +19,8 @@ public class ParticleFilter{
 	public HashSet<Particle> particles;
 	
 	private enum Direction{YP, XP, YN, XN}
-	
+//	private enum Direction{XP,XN,YP,YN}
+//	
 	private static class Particle{
 		int x;
 		int y;

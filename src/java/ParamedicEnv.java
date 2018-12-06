@@ -74,11 +74,15 @@ public class ParamedicEnv extends Environment {
 
 			} else if (action.getFunctor().equals("localise")) {
 				Literal localised = Literal.parseLiteral("localised");
-//				if (isSimulatorMode == true) {
-//					addPercept(localised);
-//					return true;
-//				}
-//	
+				if (isSimulatorMode == true) {
+					addPercept(localised);
+					
+					model.setAgPos(0, 0, 0);
+					Literal location = Literal.parseLiteral("location(self, 0, 0)");
+					addPercept("paramedic", location);
+					return true;
+				}
+
 				// Create a particle filter
 				ParticleFilter filter = new ParticleFilter(GSize, GSize);
 				
@@ -92,9 +96,6 @@ public class ParamedicEnv extends Environment {
 				
 				// Update map with filter data
 				mapView.updateFilter(filter.toString());
-				
-				// Store the direction we just moved in
-				int directionLastMoved = 0;
 			
 				// While we have more than one particle
 				outer: while (filter.getNumberParticles() > 1) {
@@ -105,7 +106,6 @@ public class ParamedicEnv extends Environment {
 					logger.info("Cell is " + colour);
 					eliminateParticlesByColour(filter, colour);
 					mapView.updateFilter(filter.toString());
-					Thread.sleep(5000);
 					
 					// Array of booleans to store whether we can move in a direction
 					// based upon whether there is an obstacle or wall
@@ -116,15 +116,12 @@ public class ParamedicEnv extends Environment {
 					
 					// For all potential directions
 					for (int i = 0; i < 4; i++) {
-						
-						if(filter.getNumberParticles() == 1)break outer;
-						
+
 						// Scan in the direction and receive a range value
 						client.sendData("SCAN:RANGE");
 						String data = client.awaitData();
 						
-						logger.info("Scan Result: "+data);
-						Thread.sleep(3000);
+						logger.info("Scan Result: "+ data);
 						
 						// If the reading is not infinity and range greater than a quarter of a cell
 						// then we know there is not an obstacle, so it is an explorable direction
@@ -136,12 +133,12 @@ public class ParamedicEnv extends Environment {
 						
 						// Update the map view
 						mapView.updateFilter(filter.toString());
-
+						
+						if(filter.getNumberParticles() == 1)break outer;
+						
 						// Rotate 90 to scan the next direction
 						client.sendData("ROTATE:90");
 						client.awaitData();
-						
-						Thread.sleep(2000);
 						
 						// Update the filter with the rotation
 						filter.rotateParticlesClockwise();
@@ -155,7 +152,7 @@ public class ParamedicEnv extends Environment {
 					
 					// Set the stack to be all the directions we can move in, excluding the direction we just came from 
 					for(int d = 0; d< 4; d++) {
-						if(validDirection[d] && (directionLastMoved+2)%4!=d) validDirections.push(d);
+						if(validDirection[d] && 2!=d) validDirections.push(d);
 					}
 					
 					// Declare the direction we want to move to, relative to the last direction we moved in					
@@ -169,7 +166,7 @@ public class ParamedicEnv extends Environment {
 						
 					}
 					// Otherwise backtrack, to explore a new path
-					else nextDirection = (directionLastMoved+2)%4;
+					else nextDirection = 2;
 					
 					logger.info("Next direction: " + nextDirection);
 					
@@ -183,8 +180,6 @@ public class ParamedicEnv extends Environment {
 						client.sendData("ROTATE:" + rotation);
 						client.awaitData();
 					}
-					
-					Thread.sleep(2000);
 					
 					// Update particle filter with the direction
 					for(int i = 0; i< nextDirection; i++) filter.rotateParticlesClockwise();
@@ -202,7 +197,6 @@ public class ParamedicEnv extends Environment {
 					// Update the map view
 					mapView.updateFilter(filter.toString());
 					
-					directionLastMoved = nextDirection;
 				}
 				
 				// Get the last particle
@@ -213,15 +207,14 @@ public class ParamedicEnv extends Environment {
 				else logger.info("No particles left in filter");
 				// Set the robots odometry
 				client.sendData("SET:" + particle[0] + "," + particle[1] + "," + particle[2]);			
-				client.awaitData();
+				logger.info("ROBOT SET:" + client.awaitData());
 				
-
 				
 				model.setAgPos(0, particle[0], particle[1]);
-				Literal location = Literal.parseLiteral("location(self, 0, 0)");
+				Literal location = Literal.parseLiteral("location(self,"+ particle[0] + "," + particle[1] + ")");
 				addPercept("paramedic", location);
-				
-				while (true) Thread.yield();
+				mapView.updateMap(model);
+
 //				return true;				
 //				
 			} else if (action.getFunctor().equals("addObstacle")) {
@@ -275,30 +268,23 @@ public class ParamedicEnv extends Environment {
 				for (int i = 0; i < path.length; i++) {
 
 					if (isSimulatorMode == false) {
-						/**
-						 * Here is where we will send the move command to the EV3
-						 */
 						client.sendData("MOVE:" + path[i].x + "," + path[i].y);
 						String data = client.awaitData();
 						logger.info(data);
-
 					}
 
 					int pathX = path[i].x;
 					int pathY = path[i].y;
 					
-					
 					// Update the agents position to the next move
 					model.setAgPos(0, pathX, pathY);
 					
-//					formattedPath.remove(i);
-					logger.info("" + formattedPath.size());
-					
 					// Update the map with the new location
 					mapView.updateMap(model, formattedPath);
-
-					// Sleep for testing purposes
-					Thread.sleep(1000);
+					if (isSimulatorMode == true) {
+						// Sleep for testing purposes
+						Thread.sleep(1000);
+					}
 				}
 
 				model.setAgPos(0, x, y);
@@ -310,67 +296,40 @@ public class ParamedicEnv extends Environment {
 				model.numberOfCriticals = criticals;
 
 			} else if (action.getFunctor().equals("nextTarget")) {
+				/**
+				 * nextTarget
+				 * Gets the closest victim to the agent and adds the agentspeak percept
+				 * 
+				 */
+				
+				// Where is the agent?
 				int[] agentPos = model.getAgentPosition();
 
+				// Array store the victims
 				ArrayList<int[]> victims = new ArrayList<int[]>(0);
-				ArrayList<int[]> potentialVictims = model.getPotentialVictimLocations();
+				
+				// The potential victim locations
+				ArrayList<int[]> potentialVictims = model.getLocations(VICTIM);
+				
+				// Get the locations of any non critical victims we have found
 				ArrayList<int[]> nonCriticalVictims = model.getLocations(NONCRITICAL);
 
-				logger.info("NUMBER OF CRITICALS: " + model.numberOfCriticals);
-
-				String output = "POTENTIAL VICTIMS:";
-				for (int i = 0; i < potentialVictims.size(); i++) {
-					output += "[" + potentialVictims.get(i)[0] + ", " + potentialVictims.get(i)[1] + "] ";
-				}
-				logger.info(output);
-
-				String output2 = "NON CRITICALS: ";
-				for (int i = 0; i < nonCriticalVictims.size(); i++) {
-					output2 += "[" + nonCriticalVictims.get(i)[0] + ", " + nonCriticalVictims.get(i)[1] + "] ";
-				}
-				logger.info(output2);
-
+				// Add the potential victims to the array
+				victims.addAll(potentialVictims);
+				
+				// If there are no critical victims left, we can add the non criticals to be selected 
 				if (model.numberOfCriticals == 0) {
-					logger.info("No more criticals, can save our non criticals");
+					logger.info("No more critical victim - can now save non critical victims");
 					victims.addAll(nonCriticalVictims);
 				}
 
-				victims.addAll(potentialVictims);
-
-				String output3 = "ALL SELECTED: ";
-				for (int i = 0; i < victims.size(); i++) {
-					output3 += "[" + victims.get(i)[0] + ", " + victims.get(i)[1] + "] ";
-				}
-				logger.info(output3);
-
-				// Create a pathfinder
-				Pathfinder p = new Pathfinder(GSize, GSize);
-
-				// Update the obstacles using the model
-				p.updateCells(model);
-
-				// Default, we say the nearest neighbour is the agents current position
-				int[] currentNearestPos = agentPos;
-				int currentShortestPath = Integer.MAX_VALUE;
-
-				// Find the nearest neighbour victim
-				for (int j = 0; j < victims.size(); j++) {
-					int[] victimLocation = victims.get(j);
-					Pathfinder.Node[] path = p.getPath(agentPos[0], agentPos[1], victimLocation[0], victimLocation[1]);
-					if (path.length < currentShortestPath) {
-//            			logger.info(victimLocation[0] + ", " + victimLocation[1] + " is closer than " + currentNearestPos[0] + ", " + currentNearestPos[1]);
-						currentNearestPos = victimLocation;
-						currentShortestPath = path.length;
-					}
-				}
-
-				logger.info("NEAREST NEIGHBOUR: " + currentNearestPos[0] + ", " + currentNearestPos[1]);
-				// Update the agents percept of nearest neighbour
-				Literal removal = Literal.parseLiteral("nearest(X,Y)");
-				Literal nearest = Literal.parseLiteral(
-						"newNearest(" + currentNearestPos[0] + "," + currentNearestPos[1] + "," + perceptIndex + ")");
+				// Get the nearest victim
+				int[] nearestVictim = getNearestVictim(agentPos, victims);
+				logger.info("Nearest Neighbour: " + nearestVictim[0] + ", " + nearestVictim[1]);
+				
+				// Add the agents percept of nearest neighbour
+				Literal nearest = Literal.parseLiteral("newNearest(" + nearestVictim[0] + "," + nearestVictim[1] + "," + perceptIndex + ")");
 				perceptIndex++;
-				// removePercept("paramedic",removal);
 				addPercept("paramedic", nearest);
 
 			} else if (action.getFunctor().equals("inspectVictim")) {
@@ -398,37 +357,19 @@ public class ParamedicEnv extends Environment {
 					/**
 					 * START TEMP TEST CODE
 					 */
-
-//	                critical(2,3).
-//	                ~critical(4,5).
-//	                ~critical(5,1).
-
-//	                ~critical(2,0).
-//	                ~critical(2,2).
-//	                critical(5,4).
-
-//	                critical(2,5).
-//	                ~critical(5,5).
-//	                critical(3,1).
-
-//	                critical(1,3).
-//	                ~critical(4,3).
-//	                ~critical(0,2).
-
-					if (x == 2 && y == 0) {
+					if (x == 2 && y == 3) {
 						Literal location = Literal.parseLiteral("colour(" + x + "," + y + ", burgandy)");
 						addPercept("paramedic", location);
-					} else if (x == 4 && y == 3) {
+					} else if (x == 4 && y == 5) {
 						Literal location = Literal.parseLiteral("colour(" + x + "," + y + ", cyan)");
 						addPercept("paramedic", location);
-					} else if (x == 0 && y == 1) {
+					} else if (x == 5 && y == 1) {
 						Literal location = Literal.parseLiteral("colour(" + x + "," + y + ", cyan)");
 						addPercept("paramedic", location);
 					} else {
 						Literal location = Literal.parseLiteral("colour(" + x + "," + y + ", white)");
 						addPercept("paramedic", location);
 					}
-
 					mapView.updateMap(model);
 					/**
 					 * END TEMP TEST CODE
@@ -470,38 +411,48 @@ public class ParamedicEnv extends Environment {
 				} else {
 					model.carryingNonCritical = true;
 				}
+				
+//				// Turn off the LED on the robot 
+//				client.sendData("LED:HASVICTIM");
+//				client.awaitData();
 
 				mapView.updateMap(model);
-				Thread.sleep(500);
+				
+				if (isSimulatorMode) {
+					Thread.sleep(500);
+				}
 
 			} else if (action.getFunctor().equals("putDownVictim")) {
 				// Reset the GUI to show we have put down a victim
 				model.carryingCritical = false;
 				model.carryingNonCritical = false;
+				
+//				// Turn off the LED on the robot 
+//				client.sendData("LED:NOVICTIM");
+//				client.awaitData();
+				
 				mapView.updateMap(model);
 
 			} else if (action.getFunctor().equals("allLocated")) {
-				// Finish the mission
+				/**
+				 * allLocated
+				 * Removes locations of potential victims when we have found all the possible victims
+				 * 
+				 */
 				ArrayList<int[]> potentialVictims = model.getLocations(VICTIM);
-				
 				for (int i = 0; i < potentialVictims.size(); i++) {
 					int[] victim = potentialVictims.get(i);
 					model.remove(VICTIM, victim[0], victim[1]);
 				}
+
 				mapView.updateMap(model);
+			
 			} else if (action.getFunctor().equals("finishRescueMission")) {
 
 
 			} else {
 				logger.info("executing: " + action + ", but not implemented! Lel");
 				return true;
-				// Note that technically we should return false here. But that could lead to the
-				// following Jason error (for example):
-				// [ParamedicEnv] executing: addObstacle(2,2), but not implemented!
-				// [paramedic] Could not finish intention: intention 6:
-				// +location(obstacle,2,2)[source(doctor)] <- ... addObstacle(X,Y) / {X=2, Y=2,
-				// D=doctor}
-				// This is due to the action failing, and there being no alternative.
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -517,6 +468,29 @@ public class ParamedicEnv extends Environment {
 		super.stop();
 	}
 
+	public int[] getNearestVictim(int[] agentPos, ArrayList<int[]> victims) {
+		// Create a pathfinder
+		Pathfinder p = new Pathfinder(GSize, GSize);
+
+		// Update the obstacles using the model
+		p.updateCells(model);
+
+		// Default, we say the nearest neighbour is the agents current position
+		int[] currentNearestPos = agentPos;
+		int currentShortestPath = Integer.MAX_VALUE;
+
+		// Find the nearest neighbour victim
+		for (int j = 0; j < victims.size(); j++) {
+			int[] victimLocation = victims.get(j);
+			Pathfinder.Node[] path = p.getPath(agentPos[0], agentPos[1], victimLocation[0], victimLocation[1]);
+			if (path.length < currentShortestPath) {
+				currentNearestPos = victimLocation;
+				currentShortestPath = path.length;
+			}
+		}
+		return currentNearestPos;
+	}
+	
 	public void eliminateParticlesByColour(ParticleFilter filter, String colour) throws IOException {
 		if (colour.equals("yellow")) {
 			for (int x = 0; x < GSize; x++) {
@@ -529,12 +503,12 @@ public class ParamedicEnv extends Environment {
 			
 			int[] hospitalLocation = model.getHospitalLocation();
 			filter.removeParticlesAt(hospitalLocation[0], hospitalLocation[1]);
-	
-			List<int[]> possibleLocations = model.getLocations(VICTIM);
-			for (int x = 0; x < possibleLocations.size(); x++) {
-				int[] location = possibleLocations.get(x);
-				filter.removeParticlesAt(location[0], location[1]);
-			}
+			// We can't use this :(
+//			List<int[]> possibleLocations = model.getLocations(VICTIM);
+//			for (int x = 0; x < possibleLocations.size(); x++) {
+//				int[] location = possibleLocations.get(x);
+//				filter.removeParticlesAt(location[0], location[1]);
+//			}
 		} else if (colour.equals("burgandy") || colour.equals("cyan")) {
 			filter.removeAllBut(model.getPotentialVictimLocations());
 		}
@@ -543,19 +517,41 @@ public class ParamedicEnv extends Environment {
 	// ======================================================================
 	class RobotBayModel extends GridWorldModel {
 
-		private RobotBayModel() {
-			super(GSize, GSize, 1); // The third parameter is the number of agents
-
-			setAgPos(0, 0, 0);
-//			Literal location = Literal.parseLiteral("location(self, 0, 0)");
-//			addPercept("paramedic", location);
-
-		}
-
 		public boolean carryingCritical = false;
 		public boolean carryingNonCritical = false;
-
 		public int numberOfCriticals = 0;
+		
+		private RobotBayModel() {
+			super(GSize, GSize, 1); // The third parameter is the number of agents
+		}
+		
+		void addAgent(int x, int y) {
+			add(AGENT, x, y);
+		}
+
+		void addVictim(int x, int y) {
+			add(VICTIM, x, y);
+		}
+
+		void addHospital(int x, int y) {
+			add(HOSPITAL, x, y);
+		}
+
+		void addObstacle(int x, int y) {
+			add(OBSTACLE, x, y);
+		}
+
+		void removeVictim(int x, int y) {
+			remove(VICTIM, x, y);
+		}
+
+		void addCritical(int x, int y) {
+			add(CRITICAL, x, y);
+		}
+
+		void addNonCritical(int x, int y) {
+			add(NONCRITICAL, x, y);
+		}
 
 		public int[] getAgentPosition() {
 			int[] agentPos = { -1, -1 };
@@ -625,34 +621,6 @@ public class ParamedicEnv extends Environment {
 		public int[] getHospitalLocation() {
 			int[] l = { 0, 0 };
 			return l;
-		}
-
-		void addAgent(int x, int y) {
-			add(AGENT, x, y);
-		}
-
-		void addVictim(int x, int y) {
-			add(VICTIM, x, y);
-		}
-
-		void addHospital(int x, int y) {
-			add(HOSPITAL, x, y);
-		}
-
-		void addObstacle(int x, int y) {
-			add(OBSTACLE, x, y);
-		}
-
-		void removeVictim(int x, int y) {
-			remove(VICTIM, x, y);
-		}
-
-		void addCritical(int x, int y) {
-			add(CRITICAL, x, y);
-		}
-
-		void addNonCritical(int x, int y) {
-			add(NONCRITICAL, x, y);
 		}
 
 	}

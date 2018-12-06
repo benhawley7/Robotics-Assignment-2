@@ -67,9 +67,6 @@ public class MapGUI {
 	 * @param p 2d array of x y positions for the path
 	 */
 	public MapGUI() {
-//    	map = m;
-//		robotPosition = r;
-//		pathPositions = p;
 		EventQueue.invokeLater(new Runnable() {
 			@Override
 			public void run() {
@@ -80,7 +77,7 @@ public class MapGUI {
 					ex.printStackTrace();
 				}
 				// Create a new JFrame Window with which can be closed
-				frame = new JFrame("Robotics Assignment 1 - Map Output");
+				frame = new JFrame("Robotics Assignment 2 - Map Output");
 				frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
 				// Create a Map Pane Layout and add it to the frame
@@ -95,6 +92,10 @@ public class MapGUI {
 	}
 
 	public void setAgentLocation(int x, int y, int c) {
+		if (x == -1 || y == -1) {
+			return;
+		}
+		
 		JLabel label = labels[x][y];
 		label.setText("R");
 		JPanel cell = cells[x][y];
