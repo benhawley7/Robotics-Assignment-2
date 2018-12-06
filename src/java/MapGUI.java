@@ -5,6 +5,7 @@ import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.GridLayout;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -91,6 +92,14 @@ public class MapGUI {
 		});
 	}
 
+	/**
+	 * setAgentLocation
+	 * Format a cell to be the agent
+	 * 
+	 * @param x 
+	 * @param y
+	 * @param c carrying variable, 1 if critical, 2 if non critical
+	 */
 	public void setAgentLocation(int x, int y, int c) {
 		if (x == -1 || y == -1) {
 			return;
@@ -112,6 +121,12 @@ public class MapGUI {
 		}
 	}
 
+	/**
+	 * updateFilter()
+	 * Update the map with 
+	 * 
+	 * @param filterString
+	 */
 	public void updateFilter(String filterString) {
 		String[] map = filterString.split("\n");
 		
@@ -192,7 +207,7 @@ public class MapGUI {
 		cell.setBorder(new LineBorder(Color.BLACK, 2));
 	}
 
-	public void addPath(ArrayList<int[]> path) {
+	public void addPath(List<int[]> path) {
 		for (int i = 0; i < path.size(); i++) {
 			int[] pos = path.get(i);
 			if (i == path.size() - 1) {
@@ -211,7 +226,7 @@ public class MapGUI {
 	 * @param p  2d array of x y positions for the path
 	 */
 	public void updateMap(ArrayList<int[]> oL, int[] aL, ArrayList<int[]> vL, int[] hL, ArrayList<int[]> cL,
-			ArrayList<int[]> nL, int c, ArrayList<int[]> path) {
+			ArrayList<int[]> nL, int c, List<int[]> path) {
 
 		ArrayList<int[]> obstacleLocations = oL;
 		int[] agentLocation = aL;
@@ -283,7 +298,7 @@ public class MapGUI {
 				nonCriticalLocations, carrying, path);
 	}
 
-	public void updateMap(ParamedicEnv.RobotBayModel model, ArrayList<int[]> path) {
+	public void updateMap(ParamedicEnv.RobotBayModel model, List<int[]> path) {
 
 		ArrayList<int[]> obstacleLocations = model.getObstacleLocations();
 		int[] agentLocation = model.getAgentPosition();
