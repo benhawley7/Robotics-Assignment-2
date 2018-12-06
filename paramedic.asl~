@@ -14,7 +14,7 @@
 		
 
 
-///////////////////// Initial goals ///////////////////////////////////////////
+///////////////////// Initial goals ////////////////////////////////////////////
 
 
 
@@ -69,7 +69,7 @@
 		//When a rescue mission has been started, and there is a hospital,
 		//a victim and an obstacle:
 		+rescueMission(Critical,NonCritical):
-			localised &
+			location(self,_,_) &
 			location(hospital,_,_) & 
 			(location(victim,_,_) | ~critical(_,_) | critical(_,_)) &
 			location(obstacle,_,_)&
