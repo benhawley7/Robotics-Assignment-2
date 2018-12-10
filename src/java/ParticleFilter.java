@@ -185,13 +185,14 @@ public class ParticleFilter{
 	 */
 	public void removeAllBut(List<int[]> keepCells) {
 		
-		//For each cell
+		//For each cell:
 		for (int x = 0; x < dimX; x++)
 			for (int y = 0; y < dimY; y++) {
 				
 				boolean skip = false;
 				
-				//For each
+				//For each element of keepCells check if it is the cell we are currently
+				//trying to clear and, if so, don't clear this cell
 				for (int[] potVictim : keepCells) {
 					if (potVictim[0] == x && potVictim[1] == y) {
 						skip = true;
@@ -204,9 +205,18 @@ public class ParticleFilter{
 			}
 	}
 	
+	/**
+	 * Remove all particles a given cell
+	 * @param x The x coordinate of the cell
+	 * @param y The y coordinate of the cell
+	 * @return True if the cell is in the grid, false otherwise
+	 */
 	public boolean removeParticlesAt(int x, int y){
 		
+		
 		if(inGrid(x,y)){
+			
+			//Try to remove each of the 4 possible particles that could be in this cell
 			particles.remove(new Particle(x,y,Direction.XP));
 			particles.remove(new Particle(x,y,Direction.XN));
 			particles.remove(new Particle(x,y,Direction.YP));
@@ -217,15 +227,23 @@ public class ParticleFilter{
 		}else return false;
 	}
 	
+	/**
+	 * Remove all particles from the filter depending on whether they have an obstacle
+	 * or wall in front of them
+	 * @param isInfront If true, remove all particles that don't have a particle in front of them, if false remove all that do
+	 */
 	public void obstacleInfront(boolean isInfront){
 		
+		//Stack to store all the particles that sould be removed
 		Stack<Particle> invalidParticles = new Stack<Particle>();
 		
+		//Iterate through each particle:
 		for(Particle p : particles){
 			
 			int targetX = -1;
 			int targetY = -1;
 			
+			//Determine which cell is infront of the particle
 			if(p.direction.equals(Direction.XP)){
 				
 				targetX = p.x+1;
@@ -248,6 +266,7 @@ public class ParticleFilter{
 				
 			}
 			
+			//Check if the cell in front is a wall or obstacle
 			if(inGrid(targetX,targetY)){
 				
 				boolean target = grid[targetX][targetY];
@@ -260,6 +279,8 @@ public class ParticleFilter{
 			}
 			
 		}
+		
+		//Remove each invalid particle
 		for(Particle ip: invalidParticles){
 			
 			particles.remove(ip);
@@ -269,6 +290,9 @@ public class ParticleFilter{
 		
 	}
 	
+	/**
+	 * Rotates each of the particles in the filter 90 degrees clockwise
+	 */
 	public void rotateParticlesClockwise(){
 		
 		for(Particle p: particles){
@@ -295,6 +319,9 @@ public class ParticleFilter{
 		particles = new HashSet<Particle>(particles);
 	}
 	
+	/**
+	 * Rotates each of the particles in the filter 90 degrees anti clockwise
+	 */
 	public void rotateParticlesAntiClockwise(){
 		
 		for(Particle p: particles){
@@ -321,6 +348,9 @@ public class ParticleFilter{
 		particles = new HashSet<Particle>(particles);
 	}
 	
+	/**
+	 * Rotates each of the particles in the filter 180 degrees clockwise
+	 */
 	public void rotateParticles180(){
 		
 		for(Particle p: particles){
@@ -347,6 +377,10 @@ public class ParticleFilter{
 		particles = new HashSet<Particle>(particles);
 	}
 	
+	/**
+	 * Moves each particle one square forward in the direction the particle is facing. 
+	 * If the particle would move into an obstacle or leave the grid, the particle is removed from the filter
+	 */
 	public void moveParticlesForward(){
 		
 		HashSet<Particle> h = new HashSet<Particle>(particles.size());
@@ -382,11 +416,15 @@ public class ParticleFilter{
 		
 	}
 	
+	/**
+	 * Returns a string used to display the contents of the particle filter
+	 */
 	@Override
 	public String toString(){
 		
 		String printString = "";
 		
+		//For each cell in the grid
 		for(int y = dimY-1; y >= 0; y--){
 			for(int x = 0; x < dimX; x++){
 				
@@ -395,11 +433,14 @@ public class ParticleFilter{
 				Particle YP = new Particle(x,y,Direction.YP);
 				Particle YN = new Particle(x,y,Direction.YN);
 				
+				//Check is there is a particle facing each of the four cardinal directions
 				boolean xp = particles.contains(XP);
 				boolean xn = particles.contains(XN);
 				boolean yp = particles.contains(YP);
 				boolean yn = particles.contains(YN);
 				
+				
+				//Add the relevant character to the string depending on what particles are in the cell
 				if(xp && xn && yp && yn){
 					
 					printString += '\u254B';
@@ -477,6 +518,10 @@ public class ParticleFilter{
 		
 	}
 	
+	/**
+	 * This method is used for debugging and not called in normal use
+	 * @param args Unused
+	 */
 	public static void main(String[] args){
 		ParticleFilter filter = new ParticleFilter(6,6);
 		filter.addObstacle(2,2);
