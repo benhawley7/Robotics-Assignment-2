@@ -15,16 +15,23 @@ import java.util.Stack;
 
 /**
  * Paramedic Environment
+ * This is quite a long file -sorry
  *
  */
 public class ParamedicEnv extends Environment {
 
-	public static final int GSize = 6; // The bay is a 6x6 grid
+	/**
+	 * Entities with the environment
+	 */
 	public static final int HOSPITAL = 8; // hospital code in grid model
 	public static final int VICTIM = 16; // victim code in grid model
-	// Obstacle is 32
 	public static final int CRITICAL = 64;
 	public static final int NONCRITICAL = 128;
+	
+	/**
+	 * X and Y size of the grid world
+	 */
+	public static final int GSize = 6; // The bay is a 6x6 grid
 
 	private Logger logger = Logger.getLogger("doctor2018." + ParamedicEnv.class.getName());
 	private RobotBayModel model;
@@ -32,6 +39,9 @@ public class ParamedicEnv extends Environment {
 	private Client client;
 	private int perceptIndex = 0;
 
+	/**
+	 * Boolean indicating if we are simulating
+	 */
 	private boolean isSimulatorMode = false;
 
 	/** Called before the MAS execution with the args informed in .mas2j */
@@ -190,6 +200,7 @@ public class ParamedicEnv extends Environment {
 				/**
 				 * moveTo
 				 * Send commands to robot to move to a particular cell
+				 * Should have seperated into outer function, but who has time
 				 */
 
 				// Get x and y terms
@@ -215,15 +226,9 @@ public class ParamedicEnv extends Environment {
 				Pathfinder.Node[] path = p.getPath(agentPos[0], agentPos[1], x, y);
 				ArrayList<int[]> formattedPath = p.convertToIntArrayList(path);
 				
-//				
-//				// This is a hack so I don't have to add another method to my GUI code - v sorry m8
-//				int[] target = new int[] {x, y};
-//				ArrayList<int[]> targetList = new ArrayList<int[]>();
-//				targetList.add(target);
-//				mapView.addPath(targetList);
-//				
-				boolean skipX = false;
-				boolean skipY = false;
+
+//				boolean skipX = false;
+//				boolean skipY = false;
 				
 				for (int i = 0; i < path.length; i++) {
 					// Update the map with the new location
@@ -260,6 +265,7 @@ public class ParamedicEnv extends Environment {
 
 				}
 
+				// Update agent position and map
 				model.setAgPos(0, x, y);
 				mapView.updateMap(model);
 
@@ -386,6 +392,7 @@ public class ParamedicEnv extends Environment {
 				logger.info("Victim Type: " + victimType);
 				model.remove(victimType, x, y);
 
+				// Set the model to believe we are carrying a victim
 				if (victimType == CRITICAL) {
 					model.carryingCritical = true;
 				} else {
@@ -398,6 +405,7 @@ public class ParamedicEnv extends Environment {
 					client.awaitData();
 				}
 
+				// Update the map
 				mapView.updateMap(model);
 				
 				if (isSimulatorMode) {
@@ -405,7 +413,10 @@ public class ParamedicEnv extends Environment {
 				}
 
 			} else if (action.getFunctor().equals("putDownVictim")) {
-				// Reset the GUI to show we have put down a victim
+				/**
+				 * putDownVictim
+				 * Update the model to put down the victim we are carrying
+				 */
 				model.carryingCritical = false;
 				model.carryingNonCritical = false;
 				
@@ -415,6 +426,7 @@ public class ParamedicEnv extends Environment {
 					client.awaitData();
 				}
 				
+				// Update the map
 				mapView.updateMap(model);
 
 			} else if (action.getFunctor().equals("allLocated")) {
@@ -432,6 +444,11 @@ public class ParamedicEnv extends Environment {
 				mapView.updateMap(model);
 			
 			} else if (action.getFunctor().equals("finish")) {
+				/**
+				 * finish 
+				 * Called when the search and rescue is completed
+				 * Tells the robot to display finished LED
+				 */
 				if (!isSimulatorMode) {
 					// Turn off the LED on the robot 
 					client.sendData("LED:FINISHED");
@@ -456,6 +473,13 @@ public class ParamedicEnv extends Environment {
 		super.stop();
 	}
 
+	/**
+	 * getNearestVictim
+	 * Returns the closest victim from the agents position using the model
+	 * @param agentPos
+	 * @param victims
+	 * @return
+	 */
 	public int[] getNearestVictim(int[] agentPos, ArrayList<int[]> victims) {
 		// Create a pathfinder
 		Pathfinder p = new Pathfinder(GSize, GSize);
@@ -479,10 +503,15 @@ public class ParamedicEnv extends Environment {
 		return currentNearestPos;
 	}
 	
+	/**
+	 * placeObstacles()
+	 * Uses the model to place obstacles in the particle filter
+	 * @param filter
+	 */
 	public void placeObstacles(ParticleFilter filter) {
 		
 		// Get the locations of the obstacles in the arena
-				ArrayList<int[]> obstacleLocations = model.getObstacleLocations();
+		ArrayList<int[]> obstacleLocations = model.getObstacleLocations();
 				
 		// For obstacle, add the location to the filter
 		obstacleLocations.forEach((obstacle) -> {
@@ -719,18 +748,41 @@ public class ParamedicEnv extends Environment {
 			add(OBSTACLE, x, y);
 		}
 
+		/**
+		 * removeVictim()
+		 * Remove victim from the model
+		 * @param x
+		 * @param y
+		 */
 		void removeVictim(int x, int y) {
 			remove(VICTIM, x, y);
 		}
 
+		/**
+		 * addCritical()
+		 * Add a critical victim to the model
+		 * @param x
+		 * @param y
+		 */
 		void addCritical(int x, int y) {
 			add(CRITICAL, x, y);
 		}
 
+		/**
+		 * addNonCritical()
+		 * Add a  non critical victim to the model
+		 * @param x
+		 * @param y
+		 */
 		void addNonCritical(int x, int y) {
 			add(NONCRITICAL, x, y);
 		}
 
+		/**
+		 * getAgentPosition()
+		 * Get the agents position in the model
+		 * @return agent position
+		 */
 		public int[] getAgentPosition() {
 			int[] agentPos = { -1, -1 };
 			// Find the position of the agent
@@ -745,6 +797,11 @@ public class ParamedicEnv extends Environment {
 			return agentPos;
 		}
 
+		/**
+		 * getObstacleLocations()
+		 * Returns the locations of obstacles
+		 * @return obstacle locations
+		 */
 		public ArrayList<int[]> getObstacleLocations() {
 			// Find the position of the agent
 			ArrayList<int[]> obstacles = new ArrayList<int[]>();
@@ -760,6 +817,11 @@ public class ParamedicEnv extends Environment {
 			return obstacles;
 		}
 
+		/**
+		 * getPotentialVictimLocations()
+		 * Return the locations of potential vicitms
+		 * @return
+		 */
 		public ArrayList<int[]> getPotentialVictimLocations() {
 			ArrayList<int[]> victims = new ArrayList<int[]>();
 			for (int x = 0; x < GSize; x++) {
@@ -773,6 +835,14 @@ public class ParamedicEnv extends Environment {
 			return victims;
 		}
 
+		/**
+		 * getLocations()
+		 * Makes most of above functions redundant
+		 * BUT - I'm commenting at home so don't want to replace them without testing
+		 * 
+		 * @param type
+		 * @return
+		 */
 		public ArrayList<int[]> getLocations(int type) {
 			ArrayList<int[]> locations = new ArrayList<int[]>();
 			for (int x = 0; x < GSize; x++) {
@@ -786,6 +856,13 @@ public class ParamedicEnv extends Environment {
 			return locations;
 		}
 
+		/**
+		 * getVictimType()
+		 * Get the type of victim at the location
+		 * @param x
+		 * @param y
+		 * @return
+		 */
 		public int getVictimType(int x, int y) {
 			if (hasObject(CRITICAL, x, y) == true) {
 				return CRITICAL;
@@ -796,6 +873,11 @@ public class ParamedicEnv extends Environment {
 			return 0;
 		}
 
+		/**
+		 * getHospitalLocation()
+		 * It's hard coded -- really sorry this file is so long, don't have time to separate it into classes :(
+		 * @return
+		 */
 		public int[] getHospitalLocation() {
 			int[] l = { 0, 0 };
 			return l;

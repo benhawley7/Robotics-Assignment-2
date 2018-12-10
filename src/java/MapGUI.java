@@ -15,27 +15,44 @@ import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.border.LineBorder;
 
 /**
- * MapGUI Class Class to create GUI to display probability values on client
+ * MapGUI Class Class to create a simulation of rescue mission
  *
  */
 public class MapGUI {
 
-	// Static colours
+	/**
+	 * Static colours
+	 */
 	private static final Color green = new Color(0, 153, 0);
 	private static final Color red = new Color(204, 0, 0);
 	private static final Color yellow = new Color(255, 204, 0);
 	private static final Color blue = new Color(0, 0, 204);
 	private static final Color darkMagenta = new Color(139, 0, 139);
 	private static final Color indigo = new Color(75, 0, 130);
-
 	private static final Color darkRed = new Color(107, 0, 0);
 	private static final Color cyan = new Color(12, 195, 177);
 
+	/**
+	 * Number of rows in the map
+	 */
 	private static int MAP_ROWS = 6;
+	
+	/**
+	 * Number of columns in the map
+	 */
 	private static int MAP_COLS = 6;
 
+	/**
+	 * 2D Array of JLabels to hold data in the cells
+	 */
 	private JLabel[][] labels = new JLabel[MAP_ROWS][MAP_COLS];
+	
+	/**
+	 * 2D array of cells representing the cells in the map
+	 */
 	private JPanel[][] cells = new JPanel[MAP_ROWS][MAP_COLS];
+	
+	
 	private JFrame frame;
 	private MapPane mapPane;
 
@@ -63,9 +80,6 @@ public class MapGUI {
 	/**
 	 * MapGUI Constructor for the map GUI Class
 	 * 
-	 * @param m 2d array of floats of probabilities
-	 * @param r array of x y position of the robot
-	 * @param p 2d array of x y positions for the path
 	 */
 	public MapGUI() {
 		EventQueue.invokeLater(new Runnable() {
@@ -123,7 +137,7 @@ public class MapGUI {
 
 	/**
 	 * updateFilter()
-	 * Update the map with 
+	 * Update the map with particles
 	 * 
 	 * @param filterString
 	 */
@@ -139,6 +153,13 @@ public class MapGUI {
 		}
 	}
 	
+	/**
+	 * setCellParticles()
+	 * Update cell to display particles
+	 * @param x
+	 * @param y
+	 * @param c
+	 */
 	public void setCellParticles(int x, int y, char c) {
 		JLabel label = labels[x][y];
 		label.setFont(new Font("monospaced", 1, 50));
@@ -146,12 +167,25 @@ public class MapGUI {
 		label.setForeground(Color.RED);
 	}
 	
+	/**
+	 * setCellParticles()
+	 * Update cell to display particles
+	 * @param x
+	 * @param y
+	 * @param c
+	 */
 	public void setCellParticles(int x, int y, String s) {
 		JLabel label = labels[x][y];
 		label.setFont(new Font("monospaced", 1, 50));
 		label.setText(s);
 	}
 	
+	/**
+	 * addObstacle
+	 * Format cell to represent obstacle
+	 * @param x
+	 * @param y
+	 */
 	public void addObstacle(int x, int y) {
 		JPanel cell = cells[x][y];
 		JLabel label = labels[x][y];
@@ -161,6 +195,12 @@ public class MapGUI {
 		label.setForeground(Color.WHITE);
 	}
 
+	/**
+	 * addHospital
+	 * Format cell to represent hospital
+	 * @param x
+	 * @param y
+	 */
 	public void addHospital(int x, int y) {
 		JPanel cell = cells[x][y];
 		JLabel label = labels[x][y];
@@ -170,6 +210,12 @@ public class MapGUI {
 		label.setForeground(Color.WHITE);
 	}
 
+	/**
+	 * addVictim
+	 * Format cell to represent a potential victim
+	 * @param x
+	 * @param y
+	 */
 	public void addVictim(int x, int y) {
 		JPanel cell = cells[x][y];
 		JLabel label = labels[x][y];
@@ -179,6 +225,12 @@ public class MapGUI {
 		label.setForeground(Color.WHITE);
 	}
 
+	/**
+	 * addCriticalVictim
+	 * Format cell to represent a critical victim
+	 * @param x
+	 * @param y
+	 */
 	public void addCriticalVictim(int x, int y) {
 		JPanel cell = cells[x][y];
 		JLabel label = labels[x][y];
@@ -188,6 +240,12 @@ public class MapGUI {
 		label.setForeground(Color.WHITE);
 	}
 
+	/**
+	 * addNonCriticalVictim
+	 * Format cell to represent a non critical victim
+	 * @param x
+	 * @param y
+	 */
 	public void addNonCriticalVictim(int x, int y) {
 		JPanel cell = cells[x][y];
 		JLabel label = labels[x][y];
@@ -197,6 +255,12 @@ public class MapGUI {
 		label.setForeground(Color.WHITE);
 	}
 
+	/**
+	 * removeCellFormatting
+	 * Reset the formatting of a cell
+	 * @param x
+	 * @param y
+	 */
 	public void removeCellFormatting(int x, int y) {
 		JPanel cell = cells[x][y];
 		JLabel label = labels[x][y];
@@ -207,6 +271,11 @@ public class MapGUI {
 		cell.setBorder(new LineBorder(Color.BLACK, 2));
 	}
 
+	/**
+	 * addPath
+	 * Add the current path of the robot to the GUI
+	 * @param path
+	 */
 	public void addPath(List<int[]> path) {
 		for (int i = 0; i < path.size(); i++) {
 			int[] pos = path.get(i);
@@ -217,13 +286,19 @@ public class MapGUI {
 			}
 		}
 	}
-
+	
 	/**
-	 * updateMap() Update the map with new values, robot and path positions
+	 * updateMap()
+	 * Iterate through each cell in the map and update its style and value
 	 * 
-	 * @param m  2d array of floats of probabilities
-	 * @param ro array of x y position of the robot
-	 * @param p  2d array of x y positions for the path
+	 * @param oL - obstacle locations
+	 * @param aL - agent location
+	 * @param vL - potential victim locations
+	 * @param hL - hospital location
+	 * @param cL - critical victim locations
+	 * @param nL - non critical victim locations
+	 * @param c - carrying a victim value
+	 * @param path
 	 */
 	public void updateMap(ArrayList<int[]> oL, int[] aL, ArrayList<int[]> vL, int[] hL, ArrayList<int[]> cL,
 			ArrayList<int[]> nL, int c, List<int[]> path) {
@@ -276,16 +351,23 @@ public class MapGUI {
 		setAgentLocation(agentLocation[0], agentLocation[1], carrying);
 	}
 
+	/**
+	 * updateMap()
+	 * Takes the model as input and extracts the data to update the map
+	 * 
+	 * @param model
+	 */
 	public void updateMap(ParamedicEnv.RobotBayModel model) {
 
+		// Get the locations of the required entities
 		ArrayList<int[]> obstacleLocations = model.getObstacleLocations();
 		int[] agentLocation = model.getAgentPosition();
 		ArrayList<int[]> victimLocations = model.getPotentialVictimLocations();
 		int[] hospitalLocation = model.getHospitalLocation();
-
 		ArrayList<int[]> criticalLocations = model.getLocations(ParamedicEnv.CRITICAL);
 		ArrayList<int[]> nonCriticalLocations = model.getLocations(ParamedicEnv.NONCRITICAL);
 
+		// Represent carrying as 0, 1 or 2 - very hacky way to do it, I'm sorry - I hate Swing.
 		int carrying = 0;
 		if (model.carryingCritical == true) {
 			carrying = 1;
@@ -293,21 +375,34 @@ public class MapGUI {
 			carrying = 2;
 		}
 
+		// Path is assumed to be an empty array list
 		ArrayList<int[]> path = new ArrayList<int[]>();
+		
+		// Update the GUI
 		updateMap(obstacleLocations, agentLocation, victimLocations, hospitalLocation, criticalLocations,
 				nonCriticalLocations, carrying, path);
 	}
 
+	/**
+	 * updateMap()
+	 * Takes the model as input and extracts the data to update the map
+	 * Also takes the current path of the robot to represent visually
+	 * 
+	 * @param model
+	 * @param path
+	 */
 	public void updateMap(ParamedicEnv.RobotBayModel model, List<int[]> path) {
 
+		// Get the locations of the required entities
 		ArrayList<int[]> obstacleLocations = model.getObstacleLocations();
 		int[] agentLocation = model.getAgentPosition();
 		ArrayList<int[]> victimLocations = model.getPotentialVictimLocations();
 		int[] hospitalLocation = model.getHospitalLocation();
-
 		ArrayList<int[]> criticalLocations = model.getLocations(ParamedicEnv.CRITICAL);
 		ArrayList<int[]> nonCriticalLocations = model.getLocations(ParamedicEnv.NONCRITICAL);
 
+		
+		// Represent carrying as 0, 1 or 2 - very hacky way to do it, I'm sorry - I hate Swing X2.
 		int carrying = 0;
 		if (model.carryingCritical == true) {
 			carrying = 1;
@@ -315,6 +410,7 @@ public class MapGUI {
 			carrying = 2;
 		}
 
+		// Update the map with the data
 		updateMap(obstacleLocations, agentLocation, victimLocations, hospitalLocation, criticalLocations,
 				nonCriticalLocations, carrying, path);
 	}
@@ -361,43 +457,6 @@ public class MapGUI {
 
 		}
 
-	}
-
-	/**
-	 * setRobotBorder() Sets the border of a cell to represent the robot position
-	 * 
-	 * @param x
-	 * @param y
-	 */
-	private void setRobotBorder(int x, int y) {
-		cells[x][y].setBorder(new LineBorder(Color.CYAN, 3));
-	}
-
-	/**
-	 * setPathBorders() Sets a sequence of cell borders to represent the current
-	 * path
-	 * 
-	 * @param pathPositions array of positions
-	 */
-	private void setPathBorders(int[][] pathPositions) {
-		for (int i = 0; i < pathPositions.length; i++) {
-			if (i != pathPositions.length - 1) {
-				cells[pathPositions[i][0]][pathPositions[i][1]].setBorder(new LineBorder(Color.magenta, 3));
-			} else {
-				cells[pathPositions[i][0]][pathPositions[i][1]].setBorder(new LineBorder(darkMagenta, 4));
-			}
-		}
-	}
-
-	/**
-	 * colorFromProbality() Returns a colour from white to grey based on input
-	 * probability
-	 * 
-	 * @param probability
-	 * @return Color
-	 */
-	private Color colorFromProbality(float probability) {
-		return new Color((1 - (probability * 0.90f)), (1 - (probability * 0.90f)), (1 - (probability * 0.90f)));
 	}
 
 }
